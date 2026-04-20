@@ -1,15 +1,15 @@
 #!/bin/bash
 set -euo pipefail
 
-if command -v agent-email-digest-send >/dev/null 2>&1; then
-  exec agent-email-digest-send "$@"
+if command -v agent-newsletter-digest-send >/dev/null 2>&1; then
+  exec agent-newsletter-digest-send "$@"
 fi
 
 WORKSPACE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 REPO_ROOT="$(cd "${WORKSPACE_DIR}/.." && pwd)"
 
-if [ -f "/opt/agent-email-digest/scripts/gmail/send-gog-digest.sh" ]; then
-  exec /opt/agent-email-digest/scripts/gmail/send-gog-digest.sh "$@"
+if [ -f "/opt/agent-newsletter-digest/scripts/gmail/send-gog-digest.sh" ]; then
+  exec /opt/agent-newsletter-digest/scripts/gmail/send-gog-digest.sh "$@"
 fi
 
 if [ -f "${REPO_ROOT}/scripts/gmail/send-gog-digest.sh" ]; then

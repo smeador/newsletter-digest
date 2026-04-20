@@ -1,15 +1,15 @@
 #!/bin/bash
 set -euo pipefail
 
-if command -v agent-email-digest-finalize >/dev/null 2>&1; then
-  exec agent-email-digest-finalize "$@"
+if command -v agent-newsletter-digest-finalize >/dev/null 2>&1; then
+  exec agent-newsletter-digest-finalize "$@"
 fi
 
 WORKSPACE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 REPO_ROOT="$(cd "${WORKSPACE_DIR}/.." && pwd)"
 
-if [ -f "/opt/agent-email-digest/scripts/email/finalize-newsletter-digest.sh" ]; then
-  exec /opt/agent-email-digest/scripts/email/finalize-newsletter-digest.sh "$@"
+if [ -f "/opt/agent-newsletter-digest/scripts/email/finalize-newsletter-digest.sh" ]; then
+  exec /opt/agent-newsletter-digest/scripts/email/finalize-newsletter-digest.sh "$@"
 fi
 
 if [ -f "${REPO_ROOT}/scripts/email/finalize-newsletter-digest.sh" ]; then
