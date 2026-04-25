@@ -61,7 +61,7 @@ The adapter should not assume:
 The adapter may assume that helper entry points are available either through:
 
 - installed helper commands from the package itself
-- skill-local files shipped with the package, such as `workspace/skills/<skill>/TEST.sh`
+- skill-local files shipped with the package, such as `adapter/openclaw/skills/<skill>/TEST.sh`
 
 The adapter should prefer stable package commands over inlining long command logic.
 
@@ -89,9 +89,9 @@ Native local may differ in exact filesystem layout, but should still satisfy:
 For the current Pip workflow, the adapter assumes:
 
 - Gmail workflow account:
-  - `pip@meador.me`
+- `gmail-workflow@example.com`
 - default digest recipient:
-  - `sean@meador.me`
+- `operator@example.com`
 
 These values are workflow configuration, not universal adapter requirements.
 

@@ -78,25 +78,25 @@ Ignore GoodLinks and non-email sources.
 
 Use `gog` in this exact retrieval flow:
 
-1. `gog gmail search QUERY --account pip@meador.me --json --results-only --no-input`
+1. `gog gmail search QUERY --account gmail-workflow@example.com --json --results-only --no-input`
 2. choose the newest valid issue
 3. run the newsletter extractor for each selected message id:
-   - `agent-newsletter-digest-extract --account pip@meador.me --message-id MESSAGE_ID --output /workspace/memory/.tmp/NAME.json`
+   - `agent-newsletter-digest-extract --account gmail-workflow@example.com --message-id MESSAGE_ID --output /workspace/memory/.tmp/NAME.json`
 4. read the extractor output, not the raw Gmail payload
 
 Command-shape rules:
 
 - the Gmail search query is a positional argument, not a `--query` flag
 - valid example:
-  - `gog gmail search "from:nytdirect@nytimes.com newer_than:2d -label:sent" --account pip@meador.me --json --results-only --no-input`
+  - `gog gmail search "from:nytdirect@nytimes.com newer_than:2d -label:sent" --account gmail-workflow@example.com --json --results-only --no-input`
 - invalid example:
-  - `gog gmail search --query "from:nytdirect@nytimes.com newer_than:2d -label:sent" --account pip@meador.me --json --no-input`
+  - `gog gmail search --query "from:nytdirect@nytimes.com newer_than:2d -label:sent" --account gmail-workflow@example.com --json --no-input`
 
 Account rules:
 
-- all Gmail retrieval and send commands in this workflow must use the configured workflow account `pip@meador.me`
+- all Gmail retrieval and send commands in this workflow must use the configured workflow account `gmail-workflow@example.com`
 - do not substitute the recipient email, the current human user email, or an inferred account name
-- `sean@meador.me` is the default digest recipient, not the Gmail API account for this workflow
+- `operator@example.com` is the default digest recipient, not the Gmail API account for this workflow
 - if a Gmail command fails because of an unknown flag or command-shape mismatch, inspect `gog gmail search --help` or the relevant `gog` help output before retrying
 
 The extractor also writes inspectable artifacts and cache files under:
@@ -138,7 +138,7 @@ Hard rules:
 - do not switch between multiple Gmail read subcommands during a normal run
 - if the extractor fails, treat that as a tool failure and report it clearly
 - do not silently substitute another unsupported command shape and continue
-- do not use any Gmail account other than `pip@meador.me` for this workflow unless the user explicitly changes the workflow account
+- do not use any Gmail account other than `gmail-workflow@example.com` for this workflow unless the user explicitly changes the workflow account
 
 Treat `gog gmail search` as the only valid Gmail search command in this workflow.
 
@@ -231,7 +231,7 @@ The formatter owns:
 
 ## Delivery
 
-- send by default to `sean@meador.me` from `pip@meador.me`
+- send by default to `operator@example.com` from `gmail-workflow@example.com`
 - use `gog gmail send`, not SMTP
 - subject format:
   - `Pip Newsletter Digest - YYYY-MM-DD`

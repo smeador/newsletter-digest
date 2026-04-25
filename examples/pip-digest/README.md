@@ -4,8 +4,8 @@ This example preserves the current Pip workflow shape while the repo split is in
 
 Current assumptions:
 
-- workflow Gmail account: `pip@meador.me`
-- default digest recipient: `sean@meador.me`
+- workflow Gmail account: `gmail-workflow@example.com`
+- default digest recipient: `operator@example.com`
 - OpenClaw skill entry point: `Run pip-newsletter-digest now.`
 
 These are example/workflow details, not core package requirements.

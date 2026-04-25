@@ -1,17 +1,17 @@
 # pip-gmail-send
 
-Use this skill when Pip needs to send an email from Pip's Gmail account through `gog`.
+Use this skill when the Pip example workflow needs to send an email through `gog`.
 
 ## Purpose
 
-- Send an email from `pip@meador.me`, using HTML plus a plain-text fallback when formatting matters
-- Support digests, notes, and other low-risk outbound mail to Sean
+- Send an email from `gmail-workflow@example.com`, using HTML plus a plain-text fallback when formatting matters
+- Support digests, notes, and other low-risk outbound mail to the configured operator recipient
 - Keep email sending local-first before promoting the same pattern to Docker/cloud
 
 ## Allowed actions
 
 - Send email through `gog gmail send`
-- Send to `sean@meador.me` by default
+- Send to `operator@example.com` by default
 - Use a concise, descriptive subject line
 - Include HTML email bodies when presentation matters, provided a plain-text fallback is also sent
 
@@ -23,15 +23,15 @@ Use this skill when Pip needs to send an email from Pip's Gmail account through 
 
 ## Requirements
 
-- `gog` installed and authorized for `pip@meador.me`
+- `gog` installed and authorized for `gmail-workflow@example.com`
 - Gmail send access already working for that account
 
 ## Default policy
 
-- Default sender account: `pip@meador.me`
-- Default recipient: `sean@meador.me`
+- Default sender account: `gmail-workflow@example.com`
+- Default recipient: `operator@example.com`
 - Default format for digests: HTML with a plain-text fallback
-- If the user asks to "email me" without further detail, send to `sean@meador.me`
+- If the user asks to "email me" without further detail, send to `operator@example.com`
 
 For newsletter digests:
 
@@ -47,7 +47,7 @@ For newsletter digests:
 ## Local helper
 
 ```bash
-bash scripts/gmail/send-gog-local.sh pip@meador.me sean@meador.me "Test subject" -
+bash scripts/gmail/send-gog-local.sh gmail-workflow@example.com operator@example.com "Test subject" -
 ```
 
 Then provide the body on stdin.
@@ -55,18 +55,18 @@ Then provide the body on stdin.
 Example:
 
 ```bash
-printf 'This is a test from Pip.\n' | bash scripts/gmail/send-gog-local.sh pip@meador.me sean@meador.me "Pip test" -
+printf 'This is a workflow test.\n' | bash scripts/gmail/send-gog-local.sh gmail-workflow@example.com operator@example.com "Workflow test" -
 ```
 
 HTML example:
 
 ```bash
-printf 'This is a test from Pip.\n' | bash scripts/gmail/send-gog-local.sh \
-  pip@meador.me \
-  sean@meador.me \
-  "Pip HTML test" \
+printf 'This is a workflow test.\n' | bash scripts/gmail/send-gog-local.sh \
+  gmail-workflow@example.com \
+  operator@example.com \
+  "Workflow HTML test" \
   - \
-  /Users/sean/Repos/gcp-claw-lab/workspace/.tmp/pip-test.html
+  /workspace/memory/.tmp/workflow-test.html
 ```
 
 ## Output requirements

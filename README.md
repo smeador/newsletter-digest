@@ -10,7 +10,7 @@ This repo owns:
 - digest JSON contract
 - deterministic HTML/plaintext rendering
 - digest finalization and send flow
-- the OpenClaw adapter layer for the Pip workflow
+- the OpenClaw adapter layer for the current Pip workflow example
 
 This repo does not own runtime provisioning such as:
 
@@ -24,15 +24,13 @@ Those remain the responsibility of the runtime repo.
 
 ## Layout
 
-- `packages/core`: shared contracts and future schema validation
-- `packages/provider-gmail`: Gmail-specific extraction/provider logic
-- `packages/renderer-email`: deterministic email rendering
-- `packages/transport-gmail-gog`: `gog`-based send transport
-- `packages/adapter-openclaw`: OpenClaw-specific wrappers and skills
-- `scripts/`: current extracted implementation entry points
-- `workspace/`: compatibility OpenClaw wrappers and skills
+- `integration.json`: lightweight manifest consumed by the runtime repo
+- `adapter/openclaw`: OpenClaw-specific skills and test runner
+- `scripts/email`: current extraction, render, and finalize entry points
+- `scripts/gmail`: current `gog`-based send transport entry point
+- `docs/contracts`: workflow contract docs
 - `examples/pip-digest`: notes for the current Pip example workflow
 
 ## Status
 
-This is the first extraction pass. The implementation is intentionally close to the source repo so behavior stays stable while the boundary hardens.
+This is still a lightweight extraction. The repo now exposes a concrete integration manifest and adapter boundary, while the core implementation remains in simple top-level scripts until a later modularization pass is worth the extra structure.
