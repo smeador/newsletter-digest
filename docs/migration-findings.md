@@ -12,5 +12,7 @@
 During this phase:
 
 - this repo is the extracted source of truth for newsletter logic
-- the adapter surface now lives under `adapter/openclaw`, while the core implementation still lives in top-level scripts
+- the adapter surface lives under `adapter/openclaw`
+- the workflow implementation now lives under `lib/*`
+- `bin/*` provides the installable command surface, while `scripts/*` remains only as a thin compatibility layer
 - behavior changes should stay minimal until the integration mode is settled

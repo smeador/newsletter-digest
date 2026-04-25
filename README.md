@@ -26,8 +26,11 @@ Those remain the responsibility of the runtime repo.
 
 - `integration.json`: lightweight manifest consumed by the runtime repo
 - `adapter/openclaw`: OpenClaw-specific skills and test runner
-- `scripts/email`: current extraction, render, and finalize entry points
-- `scripts/gmail`: current `gog`-based send transport entry point
+- `lib/extract`: newsletter extraction implementation
+- `lib/render`: deterministic digest rendering implementation
+- `lib/send`: finalize and Gmail transport implementation
+- `bin`: package-owned executable entrypoints
+- `scripts/email` and `scripts/gmail`: thin compatibility wrappers around the package entrypoints
 - `docs/contracts`: workflow contract docs
 - `examples/pip-digest`: notes for the current Pip example workflow
 
@@ -40,4 +43,11 @@ The manifest currently declares:
 
 ## Status
 
-This is still a lightweight extraction. The repo now exposes a concrete integration manifest and adapter boundary, while the core implementation remains in simple top-level scripts until a later modularization pass is worth the extra structure.
+This is still a lightweight extraction, but the package boundary is now clearer:
+
+- the integration manifest declares the runtime-facing surface
+- `adapter/openclaw` owns the OpenClaw-specific assets
+- `lib/*` owns the workflow implementation
+- `bin/*` owns the installable command surface
+
+The remaining simplification work is mostly about refining module boundaries inside `lib/*`, not about moving runtime concerns back into this repo.

@@ -6,10 +6,10 @@
     "node": ">=22"
   },
   "bin": {
-    "agent-newsletter-digest-extract": "./scripts/email/extract-newsletter-from-gmail.mjs",
-    "agent-newsletter-digest-render": "./scripts/email/render-newsletter-digest.mjs",
-    "agent-newsletter-digest-finalize": "./scripts/email/finalize-newsletter-digest.sh",
-    "agent-newsletter-digest-send": "./scripts/gmail/send-gog-digest.sh",
+    "agent-newsletter-digest-extract": "./bin/agent-newsletter-digest-extract.mjs",
+    "agent-newsletter-digest-render": "./bin/agent-newsletter-digest-render.mjs",
+    "agent-newsletter-digest-finalize": "./bin/agent-newsletter-digest-finalize.sh",
+    "agent-newsletter-digest-send": "./bin/agent-newsletter-digest-send.sh",
     "agent-newsletter-digest-openclaw-test": "./adapter/openclaw/run-skill-test.sh"
   },
   "dependencies": {
@@ -17,12 +17,12 @@
     "turndown": "^7.2.1"
   },
   "scripts": {
-    "extract": "node scripts/email/extract-newsletter-from-gmail.mjs",
-    "render": "node scripts/email/render-newsletter-digest.mjs",
-    "finalize": "bash scripts/email/finalize-newsletter-digest.sh",
+    "extract": "node bin/agent-newsletter-digest-extract.mjs",
+    "render": "node bin/agent-newsletter-digest-render.mjs",
+    "finalize": "bash bin/agent-newsletter-digest-finalize.sh",
     "test:openclaw-skill": "bash adapter/openclaw/run-skill-test.sh",
-    "check:extract": "node --check scripts/email/extract-newsletter-from-gmail.mjs",
-    "check:render": "node --check scripts/email/render-newsletter-digest.mjs",
-    "check:shell": "bash -n scripts/email/finalize-newsletter-digest.sh && bash -n scripts/gmail/send-gog-digest.sh && bash -n adapter/openclaw/run-skill-test.sh && bash -n adapter/openclaw/skills/pip-newsletter-digest/TEST.sh"
+    "check:extract": "node --check lib/extract/extract-newsletter-from-gmail.mjs && node --check bin/agent-newsletter-digest-extract.mjs && node --check scripts/email/extract-newsletter-from-gmail.mjs",
+    "check:render": "node --check lib/render/render-newsletter-digest.mjs && node --check bin/agent-newsletter-digest-render.mjs && node --check scripts/email/render-newsletter-digest.mjs",
+    "check:shell": "bash -n lib/send/finalize-newsletter-digest.sh && bash -n lib/send/send-gog-digest.sh && bash -n bin/agent-newsletter-digest-finalize.sh && bash -n bin/agent-newsletter-digest-send.sh && bash -n scripts/email/finalize-newsletter-digest.sh && bash -n scripts/gmail/send-gog-digest.sh && bash -n adapter/openclaw/run-skill-test.sh && bash -n adapter/openclaw/skills/pip-newsletter-digest/TEST.sh"
   }
 }

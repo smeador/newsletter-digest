@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { main } from "../../lib/render/render-newsletter-digest.mjs";
+import { main } from "../lib/render/render-newsletter-digest.mjs";
 
 try {
   main(process.argv.slice(2));
