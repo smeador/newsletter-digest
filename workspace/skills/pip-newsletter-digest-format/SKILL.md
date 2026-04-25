@@ -199,9 +199,9 @@ Each bullet must contain:
 
 ## Rendering boundary
 
-The renderer script owns HTML and plaintext formatting:
+The renderer command owns HTML and plaintext formatting:
 
-- `/workspace/scripts/render-newsletter-digest.sh`
+- `agent-newsletter-digest-render`
 
 Your job here is to provide stable structured content so the renderer can generate deterministic HTML and plaintext from the same JSON.
 

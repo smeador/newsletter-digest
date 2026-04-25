@@ -89,14 +89,6 @@ if [ -n "${SOURCE_ARTIFACTS_JSON}" ] && [ ! -f "${SOURCE_ARTIFACTS_JSON}" ]; the
   exit 1
 fi
 
-if [ -d "${OPENCLAW_WORKSPACE:-}" ]; then
-  WORKSPACE_DIR="${OPENCLAW_WORKSPACE}"
-elif [ -d "/workspace" ]; then
-  WORKSPACE_DIR="/workspace"
-else
-  WORKSPACE_DIR="$(cd "$(dirname "$0")/../../workspace" && pwd)"
-fi
-
 mkdir -p "${DAY_DIR}"
 
 DAY_DIGEST_JSON="${DAY_DIR}/digest.json"
@@ -115,7 +107,7 @@ if [ -n "${SOURCE_ARTIFACTS_JSON}" ]; then
   cp "${SOURCE_ARTIFACTS_JSON}" "${DAY_SOURCE_ARTIFACTS_JSON}"
 fi
 
-bash "${WORKSPACE_DIR}/scripts/render-newsletter-digest.sh" \
+agent-newsletter-digest-render \
   --input "${DAY_DIGEST_JSON}" \
   --html-out "${DAY_HTML}" \
   --text-out "${DAY_TEXT}"
@@ -142,4 +134,4 @@ if [ -n "${SOURCE_ARTIFACTS_JSON}" ]; then
   SEND_ARGS+=(--source-artifacts-json "${DAY_SOURCE_ARTIFACTS_JSON}")
 fi
 
-bash "${WORKSPACE_DIR}/scripts/send-gog-digest.sh" "${SEND_ARGS[@]}"
+agent-newsletter-digest-send "${SEND_ARGS[@]}"

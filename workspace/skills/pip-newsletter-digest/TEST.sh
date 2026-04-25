@@ -1,8 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-MESSAGE="${DIGEST_MESSAGE:-Run pip-newsletter-digest now in test mode.}"
-TIMEOUT_MS="${DIGEST_TEST_TIMEOUT_MS:-600000}"
+MESSAGE="${SKILL_TEST_MESSAGE:-${DIGEST_MESSAGE:-Run pip-newsletter-digest now in test mode.}}"
+TIMEOUT_MS="${SKILL_TEST_TIMEOUT_MS:-${DIGEST_TEST_TIMEOUT_MS:-600000}}"
 JOB_NAME="pip-newsletter-digest-test-$(TZ=America/Chicago date '+%Y%m%dT%H%M%S')-$$"
 
 job_json="$(

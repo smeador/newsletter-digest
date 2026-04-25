@@ -9,7 +9,8 @@
     "agent-newsletter-digest-extract": "./scripts/email/extract-newsletter-from-gmail.mjs",
     "agent-newsletter-digest-render": "./scripts/email/render-newsletter-digest.mjs",
     "agent-newsletter-digest-finalize": "./scripts/email/finalize-newsletter-digest.sh",
-    "agent-newsletter-digest-send": "./scripts/gmail/send-gog-digest.sh"
+    "agent-newsletter-digest-send": "./scripts/gmail/send-gog-digest.sh",
+    "agent-newsletter-digest-openclaw-test": "./scripts/openclaw/run-skill-test.sh"
   },
   "dependencies": {
     "cheerio": "^1.1.2",
@@ -19,8 +20,9 @@
     "extract": "node scripts/email/extract-newsletter-from-gmail.mjs",
     "render": "node scripts/email/render-newsletter-digest.mjs",
     "finalize": "bash scripts/email/finalize-newsletter-digest.sh",
+    "test:openclaw-skill": "bash scripts/openclaw/run-skill-test.sh",
     "check:extract": "node --check scripts/email/extract-newsletter-from-gmail.mjs",
     "check:render": "node --check scripts/email/render-newsletter-digest.mjs",
-    "check:shell": "bash -n scripts/email/finalize-newsletter-digest.sh && bash -n scripts/gmail/send-gog-digest.sh && bash -n workspace/scripts/extract-newsletter-from-gmail.sh && bash -n workspace/scripts/render-newsletter-digest.sh && bash -n workspace/scripts/finalize-newsletter-digest.sh && bash -n workspace/scripts/send-gog-digest.sh && bash -n workspace/scripts/run-digest-test-via-cron.sh"
+    "check:shell": "bash -n scripts/email/finalize-newsletter-digest.sh && bash -n scripts/gmail/send-gog-digest.sh && bash -n scripts/openclaw/run-skill-test.sh && bash -n workspace/skills/pip-newsletter-digest/TEST.sh"
   }
 }

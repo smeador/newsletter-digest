@@ -42,8 +42,7 @@ For newsletter digests:
 - the final HTML should also be written to a local artifact file before send
 - the final plain-text fallback should also be written to a local artifact file before send
 - the helper should create a timestamped run directory inside the provided day directory
-- use `bash scripts/finalize-newsletter-digest.sh --digest-json DIGEST_JSON --day-dir DAY_DIR --account ACCOUNT --to TO --subject SUBJECT --from FROM --message-ids-json MESSAGE_IDS_JSON --source-artifacts-json SOURCE_ARTIFACTS_JSON` for digest sends
-- the wrapper resolves to the installed helper when available and otherwise falls back to the repo copy
+- use `agent-newsletter-digest-finalize --digest-json DIGEST_JSON --day-dir DAY_DIR --account ACCOUNT --to TO --subject SUBJECT --from FROM --message-ids-json MESSAGE_IDS_JSON --source-artifacts-json SOURCE_ARTIFACTS_JSON` for digest sends
 
 ## Local helper
 

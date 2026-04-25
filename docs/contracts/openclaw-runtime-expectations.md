@@ -60,11 +60,10 @@ The adapter should not assume:
 
 The adapter may assume that helper entry points are available either through:
 
-- installed helper commands
-- `/workspace/scripts/*` wrappers
-- repo-resolved fallback scripts
+- installed helper commands from the package itself
+- skill-local files shipped with the package, such as `workspace/skills/<skill>/TEST.sh`
 
-The adapter should prefer stable wrapper paths over inlining long command logic.
+The adapter should prefer stable package commands over inlining long command logic.
 
 ## Runtime-specific path expectations
 
@@ -105,13 +104,15 @@ The skill owns:
 - workflow invocation semantics
 - retrieval/synthesis instructions
 - how to use the available helpers
+- any skill-owned test entrypoint such as `TEST.sh`
 
 The runtime owns:
 
 - installing capabilities
 - mounting writable paths
 - providing auth and secrets
-- exposing helper binaries/wrappers
+- exposing helper binaries
+- providing generic skill dispatch such as `agent-runtime test skill <skill>`
 
 ## Failure model
 
@@ -122,6 +123,6 @@ Examples:
 - `gog` missing
 - configured Gmail auth missing
 - writable scratch path missing
-- helper wrapper not found
+- package command or skill test entrypoint not found
 
 These should be treated as environment/runtime failures, not as reasons for the skill to invent a new execution path.

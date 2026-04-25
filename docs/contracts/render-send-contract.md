@@ -22,7 +22,7 @@ Renderer outputs:
 Current invocation shape:
 
 ```bash
-bash scripts/render-newsletter-digest.sh \
+agent-newsletter-digest-render \
   --input DIGEST_JSON \
   --html-out EMAIL_HTML \
   --text-out EMAIL_TXT
@@ -45,7 +45,7 @@ Finalizer purpose:
 Current invocation shape:
 
 ```bash
-bash scripts/finalize-newsletter-digest.sh \
+agent-newsletter-digest-finalize \
   --digest-json DIGEST_JSON \
   --day-dir DAY_DIR \
   --account ACCOUNT_EMAIL \
@@ -88,7 +88,7 @@ This is the operational summary record for the run.
 Current send helper input shape:
 
 ```bash
-bash scripts/send-gog-digest.sh \
+agent-newsletter-digest-send \
   --account ACCOUNT_EMAIL \
   --to TO_EMAIL \
   --subject SUBJECT \
