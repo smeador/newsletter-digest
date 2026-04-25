@@ -44,30 +44,18 @@ For newsletter digests:
 - the helper should create a timestamped run directory inside the provided day directory
 - use `agent-newsletter-digest-finalize --digest-json DIGEST_JSON --day-dir DAY_DIR --account ACCOUNT --to TO --subject SUBJECT --from FROM --message-ids-json MESSAGE_IDS_JSON --source-artifacts-json SOURCE_ARTIFACTS_JSON` for digest sends
 
-## Local helper
+## Command surface
 
-```bash
-bash scripts/gmail/send-gog-local.sh gmail-workflow@example.com operator@example.com "Test subject" -
-```
+For digest sends:
 
-Then provide the body on stdin.
+- use `agent-newsletter-digest-finalize ...`
+- let the finalizer render `email.html` and `email.txt`, write the run artifacts, and invoke the send helper
 
-Example:
+For non-digest workflow mail:
 
-```bash
-printf 'This is a workflow test.\n' | bash scripts/gmail/send-gog-local.sh gmail-workflow@example.com operator@example.com "Workflow test" -
-```
-
-HTML example:
-
-```bash
-printf 'This is a workflow test.\n' | bash scripts/gmail/send-gog-local.sh \
-  gmail-workflow@example.com \
-  operator@example.com \
-  "Workflow HTML test" \
-  - \
-  /workspace/memory/.tmp/workflow-test.html
-```
+- use `gog gmail send` directly
+- inspect `gog gmail send --help` before composing the command if you are unsure about flags or body handling
+- when sending HTML, make sure the HTML body argument is actual markup, not a filesystem path string
 
 ## Output requirements
 
