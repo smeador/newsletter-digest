@@ -31,6 +31,13 @@ Those remain the responsibility of the runtime repo.
 - `docs/contracts`: workflow contract docs
 - `examples/pip-digest`: notes for the current Pip example workflow
 
+The manifest currently declares:
+
+- the OpenClaw adapter roots
+- the generic skill test runner
+- the skill used for adapter smoke validation
+- lightweight smoke-test commands the runtime can execute without knowing newsletter-specific bin names
+
 ## Status
 
 This is still a lightweight extraction. The repo now exposes a concrete integration manifest and adapter boundary, while the core implementation remains in simple top-level scripts until a later modularization pass is worth the extra structure.
