@@ -289,6 +289,9 @@ If the request says `test mode`, `rerender`, or similar:
 - ignore previously sent digest emails as source material
 - still send the email
 - do not reduce digest depth just because it is a test
+- execute the digest workflow directly inside the current run
+- do not invoke `/workspace/scripts/run-digest-test-via-cron.sh`
+- do not create another temporary cron job or nested test wrapper from inside this skill run
 
 ## Constraints
 
