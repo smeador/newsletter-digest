@@ -22,6 +22,13 @@ This repo does not own runtime provisioning such as:
 
 Those remain the responsibility of the runtime repo.
 
+The intended composition model is lightweight:
+
+- the runtime stages this repo from a local checkout during deploy/build
+- `integration.json` declares the OpenClaw-facing surface
+- the runtime installs the package bins and stages the adapter skills
+- this repo does not assume it will be cloned separately on the cloud VM
+
 ## Layout
 
 - `integration.json`: lightweight manifest consumed by the runtime repo
@@ -40,6 +47,13 @@ The manifest currently declares:
 - the generic skill test runner
 - the skill used for adapter smoke validation
 - lightweight smoke-test commands the runtime can execute without knowing newsletter-specific bin names
+
+The OpenClaw skill entrypoint remains intentionally small:
+
+- `Run pip-newsletter-digest now.`
+- `Run pip-newsletter-digest now in test mode.`
+
+The runtime owns the generic `agent-runtime ... test skill ...` dispatch; this repo owns what the skill and its test entrypoint actually do.
 
 ## Status
 

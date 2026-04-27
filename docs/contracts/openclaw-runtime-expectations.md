@@ -86,16 +86,13 @@ Native local may differ in exact filesystem layout, but should still satisfy:
 
 ## Account expectations
 
-For the current Pip workflow, the adapter assumes:
+For the current Pip workflow, the adapter should assume:
 
-- Gmail workflow account:
-- `gmail-workflow@example.com`
-- default digest recipient:
-- `operator@example.com`
+- the Gmail workflow account comes from runtime configuration, not from a literal hardcoded address
+- an explicit recipient may be passed in by the caller
+- if no recipient is passed, workflow-specific logic may reuse the newest prior digest recipient from artifacts
 
 These values are workflow configuration, not universal adapter requirements.
-
-Long term, they should be configurable inputs rather than hardcoded assumptions.
 
 ## Skill/runtime boundary
 
