@@ -76,27 +76,38 @@ Ignore GoodLinks and non-email sources.
 
 ### Gmail command pattern
 
+Resolve the workflow Gmail account once at the start of the run:
+
+- `ACCOUNT="$(printenv GOG_ACCOUNT)"`
+- if `ACCOUNT` is empty, stop and report that the runtime did not provide `GOG_ACCOUNT`
+
+If the request does not explicitly provide a digest recipient, resolve the default recipient from the newest prior digest summary:
+
+- read the most recent `/workspace/memory/digests/*/summary.json`
+- reuse its `recipient` field
+- if no prior summary exists, stop and report that no default recipient could be determined
+
 Use `gog` in this exact retrieval flow:
 
-1. `gog gmail search QUERY --account gmail-workflow@example.com --json --results-only --no-input`
+1. `gog gmail search QUERY --account "$ACCOUNT" --json --results-only --no-input`
 2. choose the newest valid issue
 3. run the newsletter extractor for each selected message id:
-   - `agent-newsletter-digest-extract --account gmail-workflow@example.com --message-id MESSAGE_ID --output /workspace/memory/.tmp/NAME.json`
+   - `agent-newsletter-digest-extract --account "$ACCOUNT" --message-id MESSAGE_ID --output /workspace/memory/.tmp/NAME.json`
 4. read the extractor output, not the raw Gmail payload
 
 Command-shape rules:
 
 - the Gmail search query is a positional argument, not a `--query` flag
 - valid example:
-  - `gog gmail search "from:nytdirect@nytimes.com newer_than:2d -label:sent" --account gmail-workflow@example.com --json --results-only --no-input`
+  - `gog gmail search "from:nytdirect@nytimes.com newer_than:2d -label:sent" --account "$ACCOUNT" --json --results-only --no-input`
 - invalid example:
-  - `gog gmail search --query "from:nytdirect@nytimes.com newer_than:2d -label:sent" --account gmail-workflow@example.com --json --no-input`
+  - `gog gmail search --query "from:nytdirect@nytimes.com newer_than:2d -label:sent" --account "$ACCOUNT" --json --no-input`
 
 Account rules:
 
-- all Gmail retrieval and send commands in this workflow must use the configured workflow account `gmail-workflow@example.com`
+- all Gmail retrieval and send commands in this workflow must use the configured runtime workflow account from `GOG_ACCOUNT`
 - do not substitute the recipient email, the current human user email, or an inferred account name
-- `operator@example.com` is the default digest recipient, not the Gmail API account for this workflow
+- when no recipient is explicitly provided, reuse the newest prior digest recipient from `/workspace/memory/digests/*/summary.json`
 - if a Gmail command fails because of an unknown flag or command-shape mismatch, inspect `gog gmail search --help` or the relevant `gog` help output before retrying
 
 The extractor also writes inspectable artifacts and cache files under:
@@ -138,7 +149,7 @@ Hard rules:
 - do not switch between multiple Gmail read subcommands during a normal run
 - if the extractor fails, treat that as a tool failure and report it clearly
 - do not silently substitute another unsupported command shape and continue
-- do not use any Gmail account other than `gmail-workflow@example.com` for this workflow unless the user explicitly changes the workflow account
+- do not use any Gmail account other than the configured `GOG_ACCOUNT` for this workflow unless the user explicitly changes the workflow account
 
 Treat `gog gmail search` as the only valid Gmail search command in this workflow.
 
@@ -231,7 +242,8 @@ The formatter owns:
 
 ## Delivery
 
-- send by default to `operator@example.com` from `gmail-workflow@example.com`
+- send by default to the newest prior digest recipient from `/workspace/memory/digests/*/summary.json`
+- send from the configured runtime workflow account in `GOG_ACCOUNT`
 - use `gog gmail send`, not SMTP
 - subject format:
   - `Pip Newsletter Digest - YYYY-MM-DD`
@@ -268,7 +280,7 @@ Hard rules:
 - use a local day directory such as `/workspace/memory/digests/YYYY-MM-DD/`
 - write `selected-message-ids.json` and `source-artifact-dirs.json` to temporary files for the finalizer input
 - finalize render + send with:
-  - `agent-newsletter-digest-finalize --digest-json DIGEST_JSON --day-dir DAY_DIR --account ACCOUNT --to TO --subject SUBJECT --from FROM --message-ids-json MESSAGE_IDS_JSON --source-artifacts-json SOURCE_ARTIFACTS_JSON`
+  - `agent-newsletter-digest-finalize --digest-json DIGEST_JSON --day-dir DAY_DIR --account "$ACCOUNT" --to "$TO" --subject SUBJECT --from "$ACCOUNT" --message-ids-json MESSAGE_IDS_JSON --source-artifacts-json SOURCE_ARTIFACTS_JSON`
 - the finalizer owns copying day-root artifacts, rendering `email.html` and `email.txt`, and invoking the send helper
 - the finalizer must write `digest.json`, `email.html`, `email.txt`, `summary.json`, and `send-result.json` into the final run record
 - only treat delivery as successful if the helper returns a Gmail id in either `send_result.message_id` or `send_result.messageId`

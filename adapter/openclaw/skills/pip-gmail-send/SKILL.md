@@ -4,14 +4,14 @@ Use this skill when the Pip example workflow needs to send an email through `gog
 
 ## Purpose
 
-- Send an email from `gmail-workflow@example.com`, using HTML plus a plain-text fallback when formatting matters
+- Send an email from the runtime-provided Gmail workflow account in `GOG_ACCOUNT`, using HTML plus a plain-text fallback when formatting matters
 - Support digests, notes, and other low-risk outbound mail to the configured operator recipient
 - Keep email sending local-first before promoting the same pattern to Docker/cloud
 
 ## Allowed actions
 
 - Send email through `gog gmail send`
-- Send to `operator@example.com` by default
+- Send to the newest prior digest recipient from `/workspace/memory/digests/*/summary.json` when no recipient is explicitly provided
 - Use a concise, descriptive subject line
 - Include HTML email bodies when presentation matters, provided a plain-text fallback is also sent
 
@@ -23,15 +23,15 @@ Use this skill when the Pip example workflow needs to send an email through `gog
 
 ## Requirements
 
-- `gog` installed and authorized for `gmail-workflow@example.com`
+- `gog` installed and authorized for the account in `GOG_ACCOUNT`
 - Gmail send access already working for that account
 
 ## Default policy
 
-- Default sender account: `gmail-workflow@example.com`
-- Default recipient: `operator@example.com`
+- Default sender account: resolve `ACCOUNT="$(printenv GOG_ACCOUNT)"`
+- Default recipient: reuse the newest prior digest recipient from `/workspace/memory/digests/*/summary.json`
 - Default format for digests: HTML with a plain-text fallback
-- If the user asks to "email me" without further detail, send to `operator@example.com`
+- If the user asks to "email me" without further detail, use the same resolved default recipient
 
 For newsletter digests:
 
