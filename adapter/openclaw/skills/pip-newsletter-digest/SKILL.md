@@ -306,6 +306,7 @@ If the request says `test mode`, `rerender`, or similar:
 - execute the digest workflow directly inside the current run
 - do not invoke `/workspace/scripts/run-digest-test-via-cron.sh`
 - do not create another temporary cron job or nested test wrapper from inside this skill run
+- if you need the local date in shell, use `TZ=America/Chicago date '+%F'`; do not assume `python3` is installed
 
 ## Constraints
 
