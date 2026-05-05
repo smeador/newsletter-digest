@@ -99,6 +99,8 @@ DAY_SOURCE_ARTIFACTS_JSON="${DAY_DIR}/source-artifact-dirs.json"
 
 cp "${DIGEST_JSON}" "${DAY_DIGEST_JSON}"
 
+agent-newsletter-digest-validate --input "${DAY_DIGEST_JSON}" --write
+
 if [ -n "${MESSAGE_IDS_JSON}" ]; then
   cp "${MESSAGE_IDS_JSON}" "${DAY_MESSAGE_IDS_JSON}"
 fi

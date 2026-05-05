@@ -4,9 +4,25 @@ This contract defines the boundary after `digest.json` exists.
 
 It covers:
 
+- digest JSON validation and repair
 - deterministic render outputs
 - finalization behavior
 - send helper inputs and outputs
+
+## Digest validation contract
+
+Before rendering, callers should validate the generated `digest.json` with:
+
+```bash
+agent-newsletter-digest-validate --input DIGEST_JSON --write
+```
+
+Rules:
+
+- validation should fail fast if `digest.json` is not parseable JSON
+- the validator may repair raw control characters inside JSON string values
+- successful validation should rewrite the file into normalized pretty-printed JSON when `--write` is used
+- the finalizer also runs this validation step on the archived day-root `digest.json`, so callers should treat it as both a required pre-send check and a built-in safety net
 
 ## Render contract
 
@@ -39,6 +55,7 @@ Rules:
 Finalizer purpose:
 
 - copy digest inputs into the day directory
+- validate and normalize the archived day-root `digest.json`
 - render `email.html` and `email.txt`
 - invoke the send helper
 

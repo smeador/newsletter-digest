@@ -68,4 +68,5 @@ For non-digest workflow mail:
 - When using HTML, the value passed as the HTML body must be the actual HTML markup, not a filesystem path or temp-file path
 - A file path is only acceptable as an argument to a helper script that reads the file contents before sending; do not send the path string itself as the email body
 - For digest sends, write the structured `digest.json` artifact to disk before calling the finalizer
+- For digest sends, run `agent-newsletter-digest-validate --input DIGEST_JSON --write` before calling the finalizer
 - For digest sends, only report success if the helper/send output includes a Gmail id in `send_result.message_id` or `send_result.messageId`

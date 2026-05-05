@@ -272,6 +272,8 @@ Hard rules:
 
 - the formatter must return one valid `digest.json` object, not HTML
 - write the formatter output to a local `digest.json` file before finalization
+- run `agent-newsletter-digest-validate --input DIGEST_JSON --write` before finalization
+- if the validator repairs `digest.json`, continue with the repaired file instead of hand-editing escaping inline
 - use `gog gmail send` in a way that includes the HTML body for the digest
 - include a plain-text fallback body for email compatibility
 - a plaintext-only send is not a successful digest send unless the user explicitly asked for plaintext-only

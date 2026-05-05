@@ -35,7 +35,7 @@ The intended composition model is lightweight:
 - `adapter/openclaw`: OpenClaw-specific skills and test runner
 - `lib/extract`: newsletter extraction implementation
 - `lib/render`: deterministic digest rendering implementation
-- `lib/send`: finalize and Gmail transport implementation
+- `lib/send`: digest JSON validation/repair, finalize, and Gmail transport implementation
 - `bin`: package-owned executable entrypoints
 - `scripts/email` and `scripts/gmail`: thin compatibility wrappers around the package entrypoints
 - `docs/contracts`: workflow contract docs
