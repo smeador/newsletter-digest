@@ -42,7 +42,7 @@ Current required top-level fields:
 
 - string
 - current expected value:
-  - `Pip Newsletter Digest`
+  - `Newsletter Digest`
 
 This may become more configurable later, but the contract is:
 

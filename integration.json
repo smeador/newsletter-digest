@@ -2,7 +2,7 @@
   "name": "newsletter-digest",
   "adapter": {
     "type": "openclaw",
-    "skillsRoot": "adapter/openclaw/skills",
+    "skillsRoot": "skills",
     "skillTestRunner": "adapter/openclaw/run-skill-test.sh",
     "testSkill": "newsletter-digest"
   },

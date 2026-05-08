@@ -13,7 +13,7 @@ The newsletter repo should not need to own runtime provisioning details.
 Instead:
 
 - the runtime repo provisions capabilities
-- the newsletter adapter consumes those capabilities
+- the core newsletter skills consume those capabilities through a thin OpenClaw adapter
 
 ## Expected capabilities
 
@@ -61,7 +61,7 @@ The adapter should not assume:
 The adapter may assume that helper entry points are available either through:
 
 - installed helper commands from the package itself
-- skill-local files shipped with the package, such as `adapter/openclaw/skills/<skill>/TEST.sh`
+- adapter-owned runtime test entrypoints, such as `adapter/openclaw/tests/<skill>/TEST.sh`
 
 The adapter should prefer stable package commands over inlining long command logic.
 
@@ -86,7 +86,7 @@ Native local may differ in exact filesystem layout, but should still satisfy:
 
 ## Account expectations
 
-For the current Pip workflow, the adapter should assume:
+For the current newsletter workflow, the adapter should assume:
 
 - the Gmail workflow account comes from runtime configuration, not from a literal hardcoded address
 - an explicit recipient may be passed in by the caller
@@ -96,20 +96,20 @@ These values are workflow configuration, not universal adapter requirements.
 
 ## Skill/runtime boundary
 
-The skill owns:
+The core skill layer owns:
 
 - workflow invocation semantics
 - retrieval/synthesis instructions
 - how to use the available helpers
-- any skill-owned test entrypoint such as `TEST.sh`
 
-The runtime owns:
+The OpenClaw adapter/runtime layer owns:
 
 - installing capabilities
 - mounting writable paths
 - providing auth and secrets
 - exposing helper binaries
 - providing generic skill dispatch such as `agent-runtime test skill <skill>`
+- runtime-specific test entrypoints such as `adapter/openclaw/tests/<skill>/TEST.sh`
 
 ## Failure model
 

@@ -58,6 +58,7 @@ If your runtime exposes the bundled skill, the main entrypoints are intentionall
 - `Send today's newsletter digest.`
 
 The formatter companion skill is `newsletter-digest-format`.
+The Gmail delivery helper skill is `gmail-send`.
 
 ### As Package Commands
 
@@ -114,7 +115,8 @@ Contract: [docs/contracts/render-send-contract.md](/Users/sean/Repos/newsletter-
 - `lib/render`: digest rendering logic
 - `lib/send`: validation, finalization, and email transport logic
 - `docs/contracts`: stable workflow contracts
-- `adapter/openclaw`: OpenClaw-specific skills and adapter files
+- `skills`: core skill definitions for digest orchestration, formatting, and delivery
+- `adapter/openclaw`: thin OpenClaw-specific manifest, runtime test runner, and adapter-owned test harness
 
 ## OpenClaw Deployment
 
@@ -122,9 +124,10 @@ OpenClaw is one way to deploy this workflow, not the center of the repo.
 
 If you want to run this inside the current OpenClaw runtime setup:
 
+- the core skills live in `skills`
 - the adapter surface lives in `adapter/openclaw`
 - the runtime-facing manifest lives in `integration.json`
 - runtime expectations are documented in [docs/contracts/openclaw-runtime-expectations.md](/Users/sean/Repos/newsletter-digest/docs/contracts/openclaw-runtime-expectations.md)
 - the current runtime repo is [agent-lab](https://github.com/smeador/agent-lab)
 
-That section is intentionally small because this repo is mainly about the digest workflow itself: source extraction, digest assembly, rendering, and delivery.
+That section is intentionally small because this repo is mainly about the digest workflow itself: source extraction, digest assembly, rendering, delivery, and the core skills that drive those steps.
