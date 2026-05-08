@@ -1,66 +1,130 @@
 # Newsletter Digest
 
-This repo contains the newsletter extraction, digest synthesis, rendering, and send workflow that was extracted from the OpenClaw runtime lab.
+`newsletter-digest` is a reusable workflow for turning a set of email newsletters into a polished daily digest.
 
-## Scope
+It handles the full pipeline:
 
-This repo owns:
+- retrieve newsletter emails from Gmail
+- extract stable, reusable source artifacts from each message
+- assemble a structured `digest.json`
+- render matching HTML and plain-text versions
+- archive the run artifacts
+- send the final digest email
 
-- newsletter extraction artifacts and contracts
-- digest JSON contract
-- deterministic HTML/plaintext rendering
-- digest finalization and send flow
-- the OpenClaw adapter layer for the current newsletter workflow example
+The goal is not just "summarize some emails." The goal is to produce a repeatable digest workflow with inspectable inputs, deterministic render output, and a clean send/archive boundary.
 
-This repo does not own runtime provisioning such as:
+## What You Get
 
-- OpenClaw installation
-- Docker and cloud deployment
-- `gog` installation
-- secret rendering
-- Gmail auth bootstrapping
+A successful digest run produces:
 
-Those remain the responsibility of the runtime repo.
+- `digest.json`: the structured source of truth for the final digest
+- `email.html`: the rendered HTML email body
+- `email.txt`: the plain-text fallback email body
+- `summary.json`: operational metadata about the run
+- `send-result.json`: the transport result from the email send step
+- per-message extraction artifacts such as cleaned markdown, metadata, and curated candidate links
 
-The intended composition model is lightweight:
+That makes the workflow useful both for direct delivery and for debugging, auditing, rerendering, or reusing a previous source set.
 
-- the runtime stages this repo from a local checkout during deploy/build
-- `integration.json` declares the OpenClaw-facing surface
-- the runtime installs the package bins and stages the adapter skills
-- this repo does not assume it will be cloned separately on the cloud VM
+## What The Skill Does
 
-## Layout
+The main skill is `newsletter-digest`.
 
-- `integration.json`: lightweight manifest consumed by the runtime repo
-- `adapter/openclaw`: OpenClaw-specific skills and test runner
-- `lib/extract`: newsletter extraction implementation
-- `lib/render`: deterministic digest rendering implementation
-- `lib/send`: digest JSON validation/repair, finalize, and Gmail transport implementation
-- `bin`: package-owned executable entrypoints
-- `scripts/email` and `scripts/gmail`: thin compatibility wrappers around the package entrypoints
-- `docs/contracts`: workflow contract docs
+At a high level, it:
 
-The manifest currently declares:
+1. finds the newest relevant newsletter issues in the active time window
+2. extracts each selected message into a stable artifact set
+3. hands the cleaned source material to the formatter
+4. validates the resulting `digest.json`
+5. renders the digest into HTML and plain text
+6. sends the digest and archives the run
 
-- the OpenClaw adapter roots
-- the generic skill test runner
-- the skill used for adapter smoke validation
-- lightweight smoke-test commands the runtime can execute without knowing newsletter-specific bin names
+The current workflow is opinionated about a few source categories:
 
-The OpenClaw skill entrypoint remains intentionally small:
+- primary newsletters
+- Substack emails
+- Stanford newsletter emails
+
+Those opinions live at the skill layer. The lower-level package commands are more generally useful as extraction, validation, rendering, and send helpers.
+
+## How To Use It
+
+### As A Skill
+
+If your runtime exposes the bundled skill, the main entrypoints are intentionally simple:
 
 - `Run newsletter-digest now.`
 - `Run newsletter-digest now in test mode.`
+- `Send today's newsletter digest.`
 
-The runtime owns the generic `agent-runtime ... test skill ...` dispatch; this repo owns what the skill and its test entrypoint actually do.
+The formatter companion skill is `newsletter-digest-format`.
 
-## Status
+### As Package Commands
 
-This is still a lightweight extraction, but the package boundary is now clearer:
+This repo also exposes standalone commands for the main workflow boundaries:
 
-- the integration manifest declares the runtime-facing surface
-- `adapter/openclaw` owns the OpenClaw-specific assets
-- `lib/*` owns the workflow implementation
-- `bin/*` owns the installable command surface
+- `newsletter-digest-extract`: extract one Gmail message into cached source artifacts
+- `newsletter-digest-validate`: validate and normalize `digest.json`
+- `newsletter-digest-render`: render `digest.json` into `email.html` and `email.txt`
+- `newsletter-digest-finalize`: validate, render, archive, and send a digest run
+- `newsletter-digest-send`: send pre-rendered HTML and plain-text email bodies
 
-The remaining simplification work is mostly about refining module boundaries inside `lib/*`, not about moving runtime concerns back into this repo.
+These commands let you use the pieces independently if you want a custom orchestration layer.
+
+## Workflow Shape
+
+The workflow is organized around a few stable boundaries:
+
+### 1. Source Extraction
+
+Each selected email is converted into a cached artifact set with:
+
+- cleaned markdown/plain-text content
+- message metadata
+- curated candidate links
+- raw text and optional raw HTML for debugging
+
+This keeps downstream logic off of raw Gmail payloads.
+
+Contract: [docs/contracts/source-artifact-contract.md](/Users/sean/Repos/newsletter-digest/docs/contracts/source-artifact-contract.md)
+
+### 2. Digest Assembly
+
+The formatter produces one `digest.json` object that becomes the canonical structured digest.
+
+This is the handoff point between summarization and presentation.
+
+Contract: [docs/contracts/digest-json-contract.md](/Users/sean/Repos/newsletter-digest/docs/contracts/digest-json-contract.md)
+
+### 3. Rendering And Delivery
+
+Once `digest.json` exists, the rest of the flow is deterministic:
+
+- validate the JSON
+- render HTML and plain text
+- archive artifacts
+- send the email
+
+Contract: [docs/contracts/render-send-contract.md](/Users/sean/Repos/newsletter-digest/docs/contracts/render-send-contract.md)
+
+## Repo Layout
+
+- `bin/`: installable command entrypoints
+- `lib/extract`: newsletter extraction logic
+- `lib/render`: digest rendering logic
+- `lib/send`: validation, finalization, and email transport logic
+- `docs/contracts`: stable workflow contracts
+- `adapter/openclaw`: OpenClaw-specific skills and adapter files
+
+## OpenClaw Deployment
+
+OpenClaw is one way to deploy this workflow, not the center of the repo.
+
+If you want to run this inside the current OpenClaw runtime setup:
+
+- the adapter surface lives in `adapter/openclaw`
+- the runtime-facing manifest lives in `integration.json`
+- runtime expectations are documented in [docs/contracts/openclaw-runtime-expectations.md](/Users/sean/Repos/newsletter-digest/docs/contracts/openclaw-runtime-expectations.md)
+- the current runtime repo is [agent-lab](https://github.com/smeador/agent-lab)
+
+That section is intentionally small because this repo is mainly about the digest workflow itself: source extraction, digest assembly, rendering, and delivery.
