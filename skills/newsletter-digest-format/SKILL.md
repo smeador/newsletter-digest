@@ -4,6 +4,17 @@ Use this skill to turn the already-selected newsletter source material into the 
 
 This skill does not own inbox discovery or email rendering. Do not do mailbox search, tool discovery, or hand-authored HTML generation here unless the caller explicitly says the source set is incomplete.
 
+At the start of the run, load the workflow policy from:
+
+- `/workspace/config/newsletter-digest.json`
+
+Treat that config as the source of truth for:
+
+- digest title
+- section expectations for each selected source
+- extra collection behavior
+- any special-case formatting rules
+
 ## Core writing contract
 
 Write a real digest, not a quick summary.
@@ -38,7 +49,7 @@ Return one valid JSON object with this shape:
   "date": "April 10, 2026",
   "localDate": "2026-04-10",
   "inventory": {
-    "foundPrimary": ["NY Times Morning", "Daily Upside", "AI News"],
+    "foundPrimary": ["Primary source title"],
     "missingPrimary": [],
     "substackCount": 3,
     "stanfordCount": 0
@@ -47,7 +58,7 @@ Return one valid JSON object with this shape:
     {
       "type": "primary",
       "key": "nyt",
-      "title": "NY Times Morning",
+      "title": "Primary source title",
       "issueDate": "April 10, 2026",
       "sender": "The New York Times",
       "issueLink": "https://...",
@@ -58,7 +69,7 @@ Return one valid JSON object with this shape:
           "content": "First paragraph.\\n\\nSecond paragraph."
         },
         {
-          "title": "Other major stories",
+          "title": "Configured subsection",
           "kind": "bullets",
           "content": ["Bullet one.", "Bullet two."]
         }
@@ -80,7 +91,7 @@ Shape rules:
   - `content`
 - if `kind` is `paragraphs`, `content` must be one string with paragraphs separated by blank lines
 - if `kind` is `bullets`, `content` must be an array of strings
-- `substack_review` and `stanford` sections must use `items`
+- extra sections such as `substack_review` and `stanford` must use `items` when that is what the workflow config requires
 - each `items` entry must stay plain text except for the link field
 - all text values must be plain text, not HTML
 - prose fields must read like a finished digest, not notes about what the section should do
@@ -95,9 +106,9 @@ Include only:
 
 The inventory should be brief:
 
-- which primary newsletters were found
-- which primary newsletters were missing
-- count of Substack and Stanford items included
+- which configured primary sources were found
+- which configured primary sources were missing
+- counts for the configured extra collections
 
 Do not:
 
@@ -105,97 +116,34 @@ Do not:
 - repeat the title in multiple stacked forms
 - add extra header blocks
 
-## Primary newsletters
+## Config-driven section rules
 
-Create one section per found primary newsletter.
+Create one section per found configured primary source.
 
-Each primary newsletter section must include:
+For each primary source section:
 
-- newsletter title
-- issue date
-- sender or publication
-- issue link near the section header
-- body content using the exact section rules below
+- use the source title from the workflow config
+- include issue date
+- include sender or publication
+- include issue link near the section header
+- follow the source's configured `formatRules`
 
-Each section must use clear internal subsection labels.
+When a source has configured groups:
 
-### NY Times
+- preserve the configured group titles when the source actually supports them
+- preserve the configured `kind` for each group
+- follow configured paragraph-count guidance and notes
 
-Required structure:
+When a source has configured special cases:
 
-- one `groups` entry titled `Main article`
-- one `groups` entry titled `Other major stories`
+- apply the matching special-case override instead of forcing the default structure
+- do not fabricate groups the source material does not support
 
-Hard rules:
+For configured extra collections:
 
-- `Main article` must be `2-3` paragraphs
-- do not collapse it into one paragraph
-- explain the lead story clearly and with real detail
-- `Other major stories` must be `kind: "bullets"`
-- each bullet must describe what happened and why it matters
-- do not use headline fragments as bullets
-
-### Daily Upside
-
-Required structure:
-
-- one `groups` entry titled `Opener`
-- one `groups` entry for each of the `3` main stories using the actual article titles as the group titles
-- one `groups` entry titled `Extra Upside` when present
-
-Sunday long-form exception:
-
-- if the selected `Daily Upside` issue is the Sunday long-form edition and it is clearly built around one main feature rather than the usual opener-plus-multiple-story format, do not force the weekday structure
-- in that case, create exactly one `groups` entry titled `Main article`
-- `Main article` should be `2-4` paragraphs, depending on how much substance the feature contains
-- do not fabricate an `Opener`, fake story titles, or an `Extra Upside` section when the source does not actually have them
-
-Hard rules:
-
-- do not use generic labels like `Story 1` if the article title is clear
-- the opener must be its own labeled section
-- the three main stories must each get one paragraph
-- if more than three meaningful story blocks exist, keep the main three and place the remaining useful material in `Extra Upside`
-- do not let the opener and the main stories run together as unlabeled paragraphs
-- for the Sunday long-form edition, the exception above overrides the normal weekday structure
-
-### AI News
-
-Required structure:
-
-- one `groups` entry titled `Main article`
-- one `groups` entry titled `Twitter roundup`
-
-Hard rules:
-
-- `Main article` must be `2-3` paragraphs
-- do not collapse it into one paragraph
-- `Twitter roundup` must be `kind: "bullets"`
-- each roundup bullet must be `1-2` descriptive sentences
-- choose the most important items rather than trying to include everything
-
-## Substack review
-
-Include one bullet per included item.
-
-Do not include `AI News` here.
-
-Each bullet must contain:
-
-- newsletter or publication name first
-- title
-- link in a separate `link` field when available
-- `2-3` sentence summary in a plain-text `summary` field
-
-## Stanford
-
-Include one bullet per included item.
-
-Each bullet must contain:
-
-- title
-- link in a separate `link` field when a useful public link exists
-- `1-2` sentence summary in a plain-text `summary` field
+- create the section type required by the workflow config
+- follow the collection's configured `itemRules`
+- preserve any configured exclusions or cross-source rules supplied by the orchestrator
 
 ## Rendering boundary
 
@@ -237,14 +185,10 @@ Final reminder:
 
 Before finalizing, verify every item below:
 
-1. every found primary newsletter has a visible issue link near its header
-2. `NY Times` has a `Main article` group with at least `2` paragraphs
-3. `NY Times` `Other major stories` bullets explain significance, not just headlines
-4. `Daily Upside` has `Opener`, three titled story groups, and `Extra Upside` when present, unless it is the Sunday long-form edition, in which case it has one `Main article` group
-5. `AI News` has a `Main article` group with at least `2` paragraphs
-6. `AI News` roundup bullets are `1-2` descriptive sentences each
-7. Substack items start with the publication name and use a separate `link` field when available
-8. the JSON is valid and contains no prose outside the JSON object
+1. every found configured primary source has a visible issue link near its header
+2. every section follows its configured `formatRules` or matching special-case override
+3. every configured extra collection follows its configured `itemRules`
+4. the JSON is valid and contains no prose outside the JSON object
 
 If any item fails, revise the digest before handing it back for send.
 

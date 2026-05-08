@@ -106,6 +106,10 @@ Current expected fields:
 - `issueLink`
 - `groups`
 
+The exact group titles and counts for a given source may be driven by:
+
+- [workflow-config-contract.md](/Users/sean/Repos/newsletter-digest/docs/contracts/workflow-config-contract.md)
+
 #### `groups`
 
 - ordered array
@@ -138,6 +142,8 @@ Current expected fields:
 - `title`
 - `items`
 
+The choice to emit this section type should be driven by workflow config.
+
 Each item includes:
 
 - `publication`
@@ -157,6 +163,8 @@ Current expected fields:
 - `title`
 - `items`
 - optional `emptyText`
+
+The choice to emit this section type should be driven by workflow config.
 
 Each item includes:
 

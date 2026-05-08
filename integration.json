@@ -6,6 +6,12 @@
     "skillTestRunner": "openclaw/run-skill-test.sh",
     "testSkill": "newsletter-digest"
   },
+  "workspaceFiles": [
+    {
+      "source": "config/newsletter-digest.json",
+      "target": "config/newsletter-digest.json"
+    }
+  ],
   "smokeTests": [
     {
       "name": "extract-help",

@@ -45,7 +45,9 @@ The current workflow is opinionated about a few source categories:
 - Substack emails
 - Stanford newsletter emails
 
-Those opinions live at the skill layer. The lower-level package commands are more generally useful as extraction, validation, rendering, and send helpers.
+The orchestration mechanics live in the skills, while the workflow-specific source list and section policy live in config. The lower-level package commands are more generally useful as extraction, validation, rendering, and send helpers.
+
+- [config/newsletter-digest.json](/Users/sean/Repos/newsletter-digest/config/newsletter-digest.json)
 
 ## How To Use It
 
@@ -115,6 +117,7 @@ Contract: [docs/contracts/render-send-contract.md](/Users/sean/Repos/newsletter-
 - `lib/render`: digest rendering logic
 - `lib/send`: validation, finalization, and email transport logic
 - `docs/contracts`: stable workflow contracts
+- `config`: workflow-specific source and formatting policy
 - `skills`: core skill definitions for digest orchestration, formatting, and delivery
 - `openclaw`: runtime-facing scripts and test harnesses for the intended execution environment
 
