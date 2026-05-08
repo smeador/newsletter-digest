@@ -1,0 +1,35 @@
+{
+  "title": "Newsletter Digest",
+  "date": "May 8, 2026",
+  "localDate": "2026-05-08",
+  "inventory": {
+    "foundPrimary": ["NY Times Morning"],
+    "missingPrimary": [],
+    "substackCount": 0,
+    "stanfordCount": 0
+  },
+  "sections": [
+    {
+      "type": "primary",
+      "key": "nyt",
+      "title": "NY Times Morning",
+      "issueDate": "May 8, 2026",
+      "sender": "The New York Times",
+      "issueLink": "https://example.com/nyt-issue",
+      "groups": [
+        {
+          "title": "Main article",
+          "kind": "paragraphs",
+          "content": "This section covers a complicated update with enough financial context to show who benefits, who is exposed, and why it matters."
+        },
+        {
+          "title": "Other major stories",
+          "kind": "bullets",
+          "content": [
+            "One bullet."
+          ]
+        }
+      ]
+    }
+  ]
+}

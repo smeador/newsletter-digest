@@ -1,0 +1,31 @@
+{
+  "id": "message-123",
+  "threadId": "thread-456",
+  "labelIds": ["INBOX"],
+  "snippet": "Daily Brief lead story snippet",
+  "sizeEstimate": 2048,
+  "payload": {
+    "headers": [
+      { "name": "Subject", "value": "Daily Brief - May 8, 2026" },
+      { "name": "From", "value": "Daily Brief <daily@example.com>" },
+      { "name": "To", "value": "pip@meador.me" },
+      { "name": "Date", "value": "Fri, 8 May 2026 07:00:00 -0500" }
+    ],
+    "parts": [
+      {
+        "mimeType": "text/plain",
+        "body": {
+          "size": 91,
+          "data": "RGFpbHkgQnJpZWYKTGVhZCBzdG9yeSBwYXJhZ3JhcGguClsgaHR0cHM6Ly9leGFtcGxlLmNvbS9pc3N1ZXMvMjAyNi0wNS0wOCBdClVuc3Vic2NyaWJl"
+        }
+      },
+      {
+        "mimeType": "text/html",
+        "body": {
+          "size": 350,
+          "data": "PCFkb2N0eXBlIGh0bWw-PGh0bWw-PGJvZHk-PHA-VmlldyBpbiBicm93c2VyIDxhIGhyZWY9Imh0dHBzOi8vZXhhbXBsZS5jb20vaXNzdWVzLzIwMjYtMDUtMDgiPlZpZXcgaW4gYnJvd3NlcjwvYT48L3A-PGgxPkRhaWx5IEJyaWVmPC9oMT48cD5MZWFkIHN0b3J5IHBhcmFncmFwaC48L3A-PHA-U2Vjb25kIHBhcmFncmFwaCB3aXRoIGRldGFpbHMuPC9wPjxwPjxhIGhyZWY9Imh0dHBzOi8vb3Blbi5zdWJzdGFjay5jb20vcHViL2V4YW1wbGUvcC9zdG9yeT91dG1fc291cmNlPXN1YnN0YWNrJnV0bV9tZWRpdW09ZW1haWwiPlJlYWQgaW4gYnJvd3NlcjwvYT48L3A-PHA-VW5zdWJzY3JpYmU8L3A-PC9ib2R5PjwvaHRtbD4"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "title": "Newsletter Digest",
+  "date": "May 8, 2026",
+  "localDate": "2026-05-08",
+  "inventory": {
+    "foundPrimary": ["NY Times Morning"],
+    "missingPrimary": [],
+    "substackCount": 1,
+    "stanfordCount": 1
+  },
+  "sections": [
+    {
+      "type": "primary",
+      "key": "nyt",
+      "title": "NY Times Morning",
+      "issueDate": "May 8, 2026",
+      "sender": "The New York Times",
+      "issueLink": "https://example.com/nyt-issue",
+      "groups": [
+        {
+          "title": "Main article",
+          "kind": "paragraphs",
+          "content": "Lead paragraph with context.\n\nSecond paragraph with implications."
+        },
+        {
+          "title": "Other major stories",
+          "kind": "bullets",
+          "content": [
+            "Markets rallied after the announcement.",
+            "Lawmakers signaled a fast committee vote."
+          ]
+        }
+      ]
+    },
+    {
+      "type": "substack_review",
+      "title": "Substack Review",
+      "items": [
+        {
+          "publication": "Example Publication",
+          "title": "A thoughtful post",
+          "link": "https://example.com/substack-post",
+          "summary": "A short summary that stays in plain text."
+        }
+      ]
+    },
+    {
+      "type": "stanford",
+      "title": "Stanford",
+      "items": [
+        {
+          "title": "Research update",
+          "link": "https://example.com/research",
+          "summary": "A concise description of the research development."
+        }
+      ]
+    }
+  ]
+}
