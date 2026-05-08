@@ -42,13 +42,13 @@ For newsletter digests:
 - the final HTML should also be written to a local artifact file before send
 - the final plain-text fallback should also be written to a local artifact file before send
 - the helper should create a timestamped run directory inside the provided day directory
-- use `agent-newsletter-digest-finalize --digest-json DIGEST_JSON --day-dir DAY_DIR --account ACCOUNT --to TO --subject SUBJECT --from FROM --message-ids-json MESSAGE_IDS_JSON --source-artifacts-json SOURCE_ARTIFACTS_JSON` for digest sends
+- use `newsletter-digest-finalize --digest-json DIGEST_JSON --day-dir DAY_DIR --account ACCOUNT --to TO --subject SUBJECT --from FROM --message-ids-json MESSAGE_IDS_JSON --source-artifacts-json SOURCE_ARTIFACTS_JSON` for digest sends
 
 ## Command surface
 
 For digest sends:
 
-- use `agent-newsletter-digest-finalize ...`
+- use `newsletter-digest-finalize ...`
 - let the finalizer render `email.html` and `email.txt`, write the run artifacts, and invoke the send helper
 
 For non-digest workflow mail:
@@ -68,5 +68,5 @@ For non-digest workflow mail:
 - When using HTML, the value passed as the HTML body must be the actual HTML markup, not a filesystem path or temp-file path
 - A file path is only acceptable as an argument to a helper script that reads the file contents before sending; do not send the path string itself as the email body
 - For digest sends, write the structured `digest.json` artifact to disk before calling the finalizer
-- For digest sends, run `agent-newsletter-digest-validate --input DIGEST_JSON --write` before calling the finalizer
+- For digest sends, run `newsletter-digest-validate --input DIGEST_JSON --write` before calling the finalizer
 - For digest sends, only report success if the helper/send output includes a Gmail id in `send_result.message_id` or `send_result.messageId`

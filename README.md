@@ -1,4 +1,4 @@
-# Agent Newsletter Digest
+# Newsletter Digest
 
 This repo contains the newsletter extraction, digest synthesis, rendering, and send workflow that was extracted from the OpenClaw runtime lab.
 

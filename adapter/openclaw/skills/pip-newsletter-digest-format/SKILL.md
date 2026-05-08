@@ -201,7 +201,7 @@ Each bullet must contain:
 
 The renderer command owns HTML and plaintext formatting:
 
-- `agent-newsletter-digest-render`
+- `newsletter-digest-render`
 
 Your job here is to provide stable structured content so the renderer can generate deterministic HTML and plaintext from the same JSON.
 

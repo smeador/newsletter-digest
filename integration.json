@@ -1,5 +1,5 @@
 {
-  "name": "agent-newsletter-digest",
+  "name": "newsletter-digest",
   "adapter": {
     "type": "openclaw",
     "skillsRoot": "adapter/openclaw/skills",
@@ -9,11 +9,11 @@
   "smokeTests": [
     {
       "name": "extract-help",
-      "command": ["agent-newsletter-digest-extract", "--help"]
+      "command": ["newsletter-digest-extract", "--help"]
     },
     {
       "name": "render-help",
-      "command": ["agent-newsletter-digest-render", "--help"]
+      "command": ["newsletter-digest-render", "--help"]
     }
   ]
 }

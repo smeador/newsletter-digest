@@ -14,7 +14,7 @@ It covers:
 Before rendering, callers should validate the generated `digest.json` with:
 
 ```bash
-agent-newsletter-digest-validate --input DIGEST_JSON --write
+newsletter-digest-validate --input DIGEST_JSON --write
 ```
 
 Rules:
@@ -38,7 +38,7 @@ Renderer outputs:
 Current invocation shape:
 
 ```bash
-agent-newsletter-digest-render \
+newsletter-digest-render \
   --input DIGEST_JSON \
   --html-out EMAIL_HTML \
   --text-out EMAIL_TXT
@@ -62,7 +62,7 @@ Finalizer purpose:
 Current invocation shape:
 
 ```bash
-agent-newsletter-digest-finalize \
+newsletter-digest-finalize \
   --digest-json DIGEST_JSON \
   --day-dir DAY_DIR \
   --account ACCOUNT_EMAIL \
@@ -105,7 +105,7 @@ This is the operational summary record for the run.
 Current send helper input shape:
 
 ```bash
-agent-newsletter-digest-send \
+newsletter-digest-send \
   --account ACCOUNT_EMAIL \
   --to TO_EMAIL \
   --subject SUBJECT \

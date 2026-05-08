@@ -92,7 +92,7 @@ Use `gog` in this exact retrieval flow:
 1. `gog gmail search QUERY --account "$ACCOUNT" --json --results-only --no-input`
 2. choose the newest valid issue
 3. run the newsletter extractor for each selected message id:
-   - `agent-newsletter-digest-extract --account "$ACCOUNT" --message-id MESSAGE_ID --output /workspace/memory/.tmp/NAME.json`
+   - `newsletter-digest-extract --account "$ACCOUNT" --message-id MESSAGE_ID --output /workspace/memory/.tmp/NAME.json`
 4. read the extractor output, not the raw Gmail payload
 
 Command-shape rules:
@@ -272,7 +272,7 @@ Hard rules:
 
 - the formatter must return one valid `digest.json` object, not HTML
 - write the formatter output to a local `digest.json` file before finalization
-- run `agent-newsletter-digest-validate --input DIGEST_JSON --write` before finalization
+- run `newsletter-digest-validate --input DIGEST_JSON --write` before finalization
 - if the validator repairs `digest.json`, continue with the repaired file instead of hand-editing escaping inline
 - use `gog gmail send` in a way that includes the HTML body for the digest
 - include a plain-text fallback body for email compatibility
@@ -282,7 +282,7 @@ Hard rules:
 - use a local day directory such as `/workspace/memory/digests/YYYY-MM-DD/`
 - write `selected-message-ids.json` and `source-artifact-dirs.json` to temporary files for the finalizer input
 - finalize render + send with:
-  - `agent-newsletter-digest-finalize --digest-json DIGEST_JSON --day-dir DAY_DIR --account "$ACCOUNT" --to "$TO" --subject SUBJECT --from "$ACCOUNT" --message-ids-json MESSAGE_IDS_JSON --source-artifacts-json SOURCE_ARTIFACTS_JSON`
+  - `newsletter-digest-finalize --digest-json DIGEST_JSON --day-dir DAY_DIR --account "$ACCOUNT" --to "$TO" --subject SUBJECT --from "$ACCOUNT" --message-ids-json MESSAGE_IDS_JSON --source-artifacts-json SOURCE_ARTIFACTS_JSON`
 - the finalizer owns copying day-root artifacts, rendering `email.html` and `email.txt`, and invoking the send helper
 - the finalizer must write `digest.json`, `email.html`, `email.txt`, `summary.json`, and `send-result.json` into the final run record
 - only treat delivery as successful if the helper returns a Gmail id in either `send_result.message_id` or `send_result.messageId`

@@ -99,7 +99,7 @@ DAY_SOURCE_ARTIFACTS_JSON="${DAY_DIR}/source-artifact-dirs.json"
 
 cp "${DIGEST_JSON}" "${DAY_DIGEST_JSON}"
 
-agent-newsletter-digest-validate --input "${DAY_DIGEST_JSON}" --write
+newsletter-digest-validate --input "${DAY_DIGEST_JSON}" --write
 
 if [ -n "${MESSAGE_IDS_JSON}" ]; then
   cp "${MESSAGE_IDS_JSON}" "${DAY_MESSAGE_IDS_JSON}"
@@ -109,7 +109,7 @@ if [ -n "${SOURCE_ARTIFACTS_JSON}" ]; then
   cp "${SOURCE_ARTIFACTS_JSON}" "${DAY_SOURCE_ARTIFACTS_JSON}"
 fi
 
-agent-newsletter-digest-render \
+newsletter-digest-render \
   --input "${DAY_DIGEST_JSON}" \
   --html-out "${DAY_HTML}" \
   --text-out "${DAY_TEXT}"
@@ -136,4 +136,4 @@ if [ -n "${SOURCE_ARTIFACTS_JSON}" ]; then
   SEND_ARGS+=(--source-artifacts-json "${DAY_SOURCE_ARTIFACTS_JSON}")
 fi
 
-agent-newsletter-digest-send "${SEND_ARGS[@]}"
+newsletter-digest-send "${SEND_ARGS[@]}"
