@@ -1,6 +1,6 @@
-# pip-newsletter-digest-format
+# newsletter-digest-format
 
-Use this skill to turn the already-selected newsletter source material into the final Pip newsletter digest.
+Use this skill to turn the already-selected newsletter source material into the final newsletter digest.
 
 This skill does not own inbox discovery or email rendering. Do not do mailbox search, tool discovery, or hand-authored HTML generation here unless the caller explicitly says the source set is incomplete.
 
@@ -34,7 +34,7 @@ Return one valid JSON object with this shape:
 
 ```json
 {
-  "title": "Pip Newsletter Digest",
+  "title": "Newsletter Digest",
   "date": "April 10, 2026",
   "localDate": "2026-04-10",
   "inventory": {

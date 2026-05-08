@@ -1,6 +1,6 @@
-# pip-newsletter-digest
+# newsletter-digest
 
-Use this skill to run the Pip newsletter digest workflow end to end.
+Use this skill to run the newsletter digest workflow end to end.
 
 This skill is the orchestrator. It owns:
 
@@ -12,7 +12,7 @@ This skill is the orchestrator. It owns:
 
 Do not use this skill to invent the final digest structure from scratch. Use the formatter skill at:
 
-- `/workspace/skills/pip-newsletter-digest-format/SKILL.md`
+- `/workspace/skills/newsletter-digest-format/SKILL.md`
 
 once the source set is selected.
 
@@ -20,10 +20,10 @@ once the source set is selected.
 
 Treat these requests as direct execution commands:
 
-- `Run pip-newsletter-digest now.`
-- `Run pip-newsletter-digest now in test mode.`
-- `Run the Pip newsletter digest now.`
-- `Send today's Pip newsletter digest.`
+- `Run newsletter-digest now.`
+- `Run newsletter-digest now in test mode.`
+- `Run the newsletter digest now.`
+- `Send today's newsletter digest.`
 
 Do not ask:
 
@@ -216,7 +216,7 @@ Never use:
 
 After source selection is complete, switch to the formatter skill:
 
-- `/workspace/skills/pip-newsletter-digest-format/SKILL.md`
+- `/workspace/skills/newsletter-digest-format/SKILL.md`
 
 Pass it the selected source material cleanly:
 
@@ -246,7 +246,7 @@ The formatter owns:
 - send from the configured runtime workflow account in `GOG_ACCOUNT`
 - use `gog gmail send`, not SMTP
 - subject format:
-  - `Pip Newsletter Digest - YYYY-MM-DD`
+  - `Newsletter Digest - YYYY-MM-DD`
 - use the local date in `America/Chicago`
 - send the digest as an HTML email with a plain-text fallback
 

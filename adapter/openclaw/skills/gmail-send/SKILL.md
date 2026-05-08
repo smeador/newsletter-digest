@@ -1,6 +1,6 @@
-# pip-gmail-send
+# gmail-send
 
-Use this skill when the Pip example workflow needs to send an email through `gog`.
+Use this skill when the newsletter workflow needs to send an email through `gog`.
 
 ## Purpose
 

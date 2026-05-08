@@ -4,7 +4,7 @@
     "type": "openclaw",
     "skillsRoot": "adapter/openclaw/skills",
     "skillTestRunner": "adapter/openclaw/run-skill-test.sh",
-    "testSkill": "pip-newsletter-digest"
+    "testSkill": "newsletter-digest"
   },
   "smokeTests": [
     {

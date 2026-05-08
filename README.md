@@ -10,7 +10,7 @@ This repo owns:
 - digest JSON contract
 - deterministic HTML/plaintext rendering
 - digest finalization and send flow
-- the OpenClaw adapter layer for the current Pip workflow example
+- the OpenClaw adapter layer for the current newsletter workflow example
 
 This repo does not own runtime provisioning such as:
 
@@ -39,7 +39,6 @@ The intended composition model is lightweight:
 - `bin`: package-owned executable entrypoints
 - `scripts/email` and `scripts/gmail`: thin compatibility wrappers around the package entrypoints
 - `docs/contracts`: workflow contract docs
-- `examples/pip-digest`: notes for the current Pip example workflow
 
 The manifest currently declares:
 
@@ -50,8 +49,8 @@ The manifest currently declares:
 
 The OpenClaw skill entrypoint remains intentionally small:
 
-- `Run pip-newsletter-digest now.`
-- `Run pip-newsletter-digest now in test mode.`
+- `Run newsletter-digest now.`
+- `Run newsletter-digest now in test mode.`
 
 The runtime owns the generic `agent-runtime ... test skill ...` dispatch; this repo owns what the skill and its test entrypoint actually do.
 

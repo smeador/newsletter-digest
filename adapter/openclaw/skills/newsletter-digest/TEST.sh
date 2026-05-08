@@ -1,9 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
-MESSAGE="${SKILL_TEST_MESSAGE:-${DIGEST_MESSAGE:-Run pip-newsletter-digest now in test mode.}}"
+MESSAGE="${SKILL_TEST_MESSAGE:-${DIGEST_MESSAGE:-Run newsletter-digest now in test mode.}}"
 TIMEOUT_MS="${SKILL_TEST_TIMEOUT_MS:-${DIGEST_TEST_TIMEOUT_MS:-600000}}"
-JOB_NAME="pip-newsletter-digest-test-$(TZ=America/Chicago date '+%Y%m%dT%H%M%S')-$$"
+JOB_NAME="newsletter-digest-test-$(TZ=America/Chicago date '+%Y%m%dT%H%M%S')-$$"
 
 job_json="$(
   openclaw cron add \
