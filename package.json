@@ -11,7 +11,7 @@
     "newsletter-digest-validate": "./bin/newsletter-digest-validate.mjs",
     "newsletter-digest-finalize": "./bin/newsletter-digest-finalize.sh",
     "newsletter-digest-send": "./bin/newsletter-digest-send.sh",
-    "newsletter-digest-openclaw-test": "./adapter/openclaw/run-skill-test.sh"
+    "newsletter-digest-openclaw-test": "./openclaw/run-skill-test.sh"
   },
   "dependencies": {
     "cheerio": "^1.1.2",
@@ -22,10 +22,10 @@
     "render": "node bin/newsletter-digest-render.mjs",
     "validate": "node bin/newsletter-digest-validate.mjs",
     "finalize": "bash bin/newsletter-digest-finalize.sh",
-    "test:openclaw-skill": "bash adapter/openclaw/run-skill-test.sh",
+    "test:openclaw-skill": "bash openclaw/run-skill-test.sh",
     "check:extract": "node --check lib/extract/extract-newsletter-from-gmail.mjs && node --check bin/newsletter-digest-extract.mjs && node --check scripts/email/extract-newsletter-from-gmail.mjs",
     "check:render": "node --check lib/render/render-newsletter-digest.mjs && node --check bin/newsletter-digest-render.mjs && node --check scripts/email/render-newsletter-digest.mjs",
     "check:validate": "node --check lib/send/validate-digest-json.mjs && node --check bin/newsletter-digest-validate.mjs",
-    "check:shell": "bash -n lib/send/finalize-newsletter-digest.sh && bash -n lib/send/send-gog-digest.sh && bash -n bin/newsletter-digest-finalize.sh && bash -n bin/newsletter-digest-send.sh && bash -n scripts/email/finalize-newsletter-digest.sh && bash -n scripts/gmail/send-gog-digest.sh && bash -n adapter/openclaw/run-skill-test.sh && bash -n adapter/openclaw/tests/newsletter-digest/TEST.sh"
+    "check:shell": "bash -n lib/send/finalize-newsletter-digest.sh && bash -n lib/send/send-gog-digest.sh && bash -n bin/newsletter-digest-finalize.sh && bash -n bin/newsletter-digest-send.sh && bash -n scripts/email/finalize-newsletter-digest.sh && bash -n scripts/gmail/send-gog-digest.sh && bash -n openclaw/run-skill-test.sh && bash -n openclaw/tests/newsletter-digest/TEST.sh"
   }
 }

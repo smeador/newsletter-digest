@@ -3,7 +3,7 @@
   "adapter": {
     "type": "openclaw",
     "skillsRoot": "skills",
-    "skillTestRunner": "adapter/openclaw/run-skill-test.sh",
+    "skillTestRunner": "openclaw/run-skill-test.sh",
     "testSkill": "newsletter-digest"
   },
   "smokeTests": [

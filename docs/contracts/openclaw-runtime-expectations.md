@@ -1,6 +1,6 @@
-# OpenClaw Adapter Runtime Expectations
+# OpenClaw Runtime Expectations
 
-This contract defines what the OpenClaw-facing newsletter adapter may assume about the runtime environment.
+This contract defines what the newsletter workflow may assume about the OpenClaw runtime environment.
 
 The skill is the agent-facing entry point.
 
@@ -13,7 +13,7 @@ The newsletter repo should not need to own runtime provisioning details.
 Instead:
 
 - the runtime repo provisions capabilities
-- the core newsletter skills consume those capabilities through a thin OpenClaw adapter
+- this repo's skills and scripts consume those capabilities directly inside OpenClaw
 
 ## Expected capabilities
 
@@ -58,12 +58,12 @@ The adapter should not assume:
 
 ### Helper availability
 
-The adapter may assume that helper entry points are available either through:
+The workflow may assume that helper entry points are available either through:
 
 - installed helper commands from the package itself
-- adapter-owned runtime test entrypoints, such as `adapter/openclaw/tests/<skill>/TEST.sh`
+- OpenClaw-owned runtime test entrypoints, such as `openclaw/tests/<skill>/TEST.sh`
 
-The adapter should prefer stable package commands over inlining long command logic.
+The workflow should prefer stable package commands over inlining long command logic.
 
 ## Runtime-specific path expectations
 
@@ -86,7 +86,7 @@ Native local may differ in exact filesystem layout, but should still satisfy:
 
 ## Account expectations
 
-For the current newsletter workflow, the adapter should assume:
+For the current newsletter workflow, the runtime should assume:
 
 - the Gmail workflow account comes from runtime configuration, not from a literal hardcoded address
 - an explicit recipient may be passed in by the caller
@@ -102,18 +102,18 @@ The core skill layer owns:
 - retrieval/synthesis instructions
 - how to use the available helpers
 
-The OpenClaw adapter/runtime layer owns:
+The OpenClaw runtime layer owns:
 
 - installing capabilities
 - mounting writable paths
 - providing auth and secrets
 - exposing helper binaries
 - providing generic skill dispatch such as `agent-runtime test skill <skill>`
-- runtime-specific test entrypoints such as `adapter/openclaw/tests/<skill>/TEST.sh`
+- runtime-specific test entrypoints such as `openclaw/tests/<skill>/TEST.sh`
 
 ## Failure model
 
-If a runtime expectation is not satisfied, the adapter should fail clearly.
+If a runtime expectation is not satisfied, the workflow should fail clearly.
 
 Examples:
 

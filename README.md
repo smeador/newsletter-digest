@@ -51,7 +51,7 @@ Those opinions live at the skill layer. The lower-level package commands are mor
 
 ### As A Skill
 
-If your runtime exposes the bundled skill, the main entrypoints are intentionally simple:
+Inside OpenClaw, the main entrypoints are intentionally simple:
 
 - `Run newsletter-digest now.`
 - `Run newsletter-digest now in test mode.`
@@ -116,18 +116,18 @@ Contract: [docs/contracts/render-send-contract.md](/Users/sean/Repos/newsletter-
 - `lib/send`: validation, finalization, and email transport logic
 - `docs/contracts`: stable workflow contracts
 - `skills`: core skill definitions for digest orchestration, formatting, and delivery
-- `adapter/openclaw`: thin OpenClaw-specific manifest, runtime test runner, and adapter-owned test harness
+- `openclaw`: runtime-facing scripts and test harnesses for the intended execution environment
 
-## OpenClaw Deployment
+## OpenClaw Runtime
 
-OpenClaw is one way to deploy this workflow, not the center of the repo.
+OpenClaw is the intended way to run this workflow end to end.
 
-If you want to run this inside the current OpenClaw runtime setup:
+The repo is organized around that assumption:
 
 - the core skills live in `skills`
-- the adapter surface lives in `adapter/openclaw`
-- the runtime-facing manifest lives in `integration.json`
+- the OpenClaw runtime surface lives in `openclaw`
+- the runtime-facing manifest stays at `integration.json`
 - runtime expectations are documented in [docs/contracts/openclaw-runtime-expectations.md](/Users/sean/Repos/newsletter-digest/docs/contracts/openclaw-runtime-expectations.md)
 - the current runtime repo is [agent-lab](https://github.com/smeador/agent-lab)
 
-That section is intentionally small because this repo is mainly about the digest workflow itself: source extraction, digest assembly, rendering, delivery, and the core skills that drive those steps.
+The repo still keeps the lower-level commands reusable, but the full orchestration model, artifact layout, and runtime assumptions are designed around OpenClaw rather than a generic pluggable runtime layer.
