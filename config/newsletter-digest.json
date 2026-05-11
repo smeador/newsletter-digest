@@ -8,9 +8,6 @@
     "transport": "gog gmail send"
   },
   "sourcePolicy": {
-    "ignoreNotes": [
-      "Ignore GoodLinks and non-email sources."
-    ],
     "primary": [
       {
         "key": "nyt",
@@ -24,7 +21,7 @@
         "linkPreference": "issue-level browser version",
         "selectionRules": [
           "choose the newest valid issue in the active window",
-          "prefer the newest same-day issue in America/Chicago when one exists"
+          "prefer the newest same-day issue in the configured timezone when one exists"
         ],
         "formatRules": {
           "sectionType": "primary",
@@ -61,7 +58,7 @@
         "linkPreference": "issue-level browser version",
         "selectionRules": [
           "choose the newest valid issue in the active window",
-          "prefer the newest same-day issue in America/Chicago when one exists",
+          "prefer the newest same-day issue in the configured timezone when one exists",
           "if sender formatting changes, match using sender variants, subject, publication, and body clues"
         ],
         "formatRules": {
@@ -117,7 +114,7 @@
         "linkPreference": "issue-level browser version",
         "selectionRules": [
           "choose the newest valid issue in the active window",
-          "prefer the newest same-day issue in America/Chicago when one exists"
+          "prefer the newest same-day issue in the configured timezone when one exists"
         ],
         "formatRules": {
           "sectionType": "primary",
@@ -145,6 +142,8 @@
         "key": "substack-review",
         "title": "Substack Review",
         "sectionType": "substack_review",
+        "inventoryLabel": "Substack Review",
+        "itemName": "items",
         "lookbackHours": 24,
         "linkPreference": "article page",
         "excludeSourceKeys": [
@@ -161,6 +160,8 @@
         "key": "stanford",
         "title": "Stanford",
         "sectionType": "stanford",
+        "inventoryLabel": "Stanford",
+        "itemName": "items",
         "lookbackHours": 24,
         "linkPreference": "useful public article page when one exists",
         "itemRules": [

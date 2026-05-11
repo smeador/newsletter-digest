@@ -61,7 +61,6 @@ Current example:
 
 `sourcePolicy` currently includes:
 
-- `ignoreNotes`
 - `primary`
 - `extras`
 - `generalSelectionRules`
@@ -87,6 +86,8 @@ Each extra collection entry currently includes:
 - `key`
 - `title`
 - `sectionType`
+- `inventoryLabel`
+- `itemName`
 - `lookbackHours`
 - `linkPreference`
 - `itemRules`
@@ -117,8 +118,9 @@ That means this config may influence:
 - which sections are produced
 - the titles and group structure inside those sections
 - how many items/groups are expected
+- how configured extra counts are labeled in inventory output
 
-But it does not yet change renderer-supported section types automatically.
+Configured item sections are renderer-supported when they follow the digest JSON item-section shape. New structural section families still require renderer support.
 
 ## Versioning guidance
 

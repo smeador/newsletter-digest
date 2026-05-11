@@ -51,8 +51,13 @@ Return one valid JSON object with this shape:
   "inventory": {
     "foundPrimary": ["Primary source title"],
     "missingPrimary": [],
-    "substackCount": 3,
-    "stanfordCount": 0
+    "extraCounts": {
+      "configured-extra-key": {
+        "title": "Configured Extra Title",
+        "count": 3,
+        "itemName": "items"
+      }
+    }
   },
   "sections": [
     {
@@ -83,6 +88,8 @@ Shape rules:
 
 - `title`, `date`, and `localDate` must be strings
 - `inventory.foundPrimary` and `inventory.missingPrimary` must be arrays of strings
+- `inventory.extraCounts` should be an object keyed by the configured extra collection key
+- each `inventory.extraCounts` entry should include `title`, `count`, and optional `itemName`
 - `sections` must be an ordered array
 - `primary` sections must use `groups`
 - each group must include:
@@ -108,7 +115,8 @@ The inventory should be brief:
 
 - which configured primary sources were found
 - which configured primary sources were missing
-- counts for the configured extra collections
+- counts for configured extra collections in `inventory.extraCounts`
+- use each extra collection's configured `key`, `inventoryLabel` or `title`, and `itemName`
 
 Do not:
 

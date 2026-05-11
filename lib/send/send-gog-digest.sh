@@ -13,6 +13,7 @@ Usage:
     --html-file HTML_FILE \
     --day-dir DAY_DIR \
     [--from FROM_EMAIL] \
+    [--timezone TIMEZONE] \
     [--message-ids-json MESSAGE_IDS_JSON] \
     [--source-artifacts-json SOURCE_ARTIFACTS_JSON]
 EOF
@@ -27,6 +28,7 @@ TEXT_FILE=""
 HTML_FILE=""
 DAY_DIR=""
 FROM_EMAIL=""
+TIMEZONE="${NEWSLETTER_DIGEST_TIMEZONE:-}"
 MESSAGE_IDS_JSON=""
 SOURCE_ARTIFACTS_JSON=""
 
@@ -62,6 +64,10 @@ while [ $# -gt 0 ]; do
       ;;
     --from)
       FROM_EMAIL="${2:-}"
+      shift 2
+      ;;
+    --timezone)
+      TIMEZONE="${2:-}"
       shift 2
       ;;
     --message-ids-json)
@@ -108,8 +114,9 @@ fi
 
 mkdir -p "${DAY_DIR}"
 
-LOCAL_DATE="$(TZ=America/Chicago date '+%Y-%m-%d')"
-LOCAL_TIME="$(TZ=America/Chicago date '+%Y-%m-%dT%H-%M-%S')"
+TIMEZONE="${TIMEZONE:-UTC}"
+LOCAL_DATE="$(TZ="${TIMEZONE}" date '+%Y-%m-%d')"
+LOCAL_TIME="$(TZ="${TIMEZONE}" date '+%Y-%m-%dT%H-%M-%S')"
 RUN_DIR="${DAY_DIR}/${LOCAL_TIME}"
 
 if [ -e "${RUN_DIR}" ]; then
@@ -162,6 +169,7 @@ cat > "${SUMMARY_FILE}" <<EOF
   "digestJson": $(jq -Rn --arg v "${DIGEST_JSON:+${RUN_DIR}/digest.json}" '$v'),
   "localDate": $(jq -Rn --arg v "${LOCAL_DATE}" '$v'),
   "runTimestamp": $(jq -Rn --arg v "${LOCAL_TIME}" '$v'),
+  "timezone": $(jq -Rn --arg v "${TIMEZONE}" '$v'),
   "runDir": $(jq -Rn --arg v "${RUN_DIR}" '$v'),
   "selectedMessageIds": ${MESSAGE_IDS_JSON_VALUE},
   "sourceArtifactDirs": ${SOURCE_ARTIFACTS_JSON_VALUE}

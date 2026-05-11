@@ -66,13 +66,16 @@ Current expected fields:
 
 - `foundPrimary`
 - `missingPrimary`
-- `substackCount`
-- `stanfordCount`
+- `extraCounts`
 
 Rules:
 
 - `foundPrimary` and `missingPrimary` are arrays of strings
-- count fields are numbers
+- `extraCounts` is an object keyed by configured extra collection key
+- each `extraCounts` value should include:
+  - `title`
+  - `count`
+  - optional `itemName`
 
 ### `sections`
 
@@ -91,8 +94,9 @@ Additional fields depend on section type.
 ### Supported section types today
 
 - `primary`
-- `substack_review`
-- `stanford`
+- configured item sections with `items`
+
+Historical configured item section types include `substack_review` and `stanford`, but renderer behavior should be driven by section shape instead of hardcoded publication names.
 
 ### `primary` section
 
@@ -134,28 +138,7 @@ Supported `kind` values today:
 
 - `content` must be an array of strings
 
-### `substack_review` section
-
-Current expected fields:
-
-- `type`
-- `title`
-- `items`
-
-The choice to emit this section type should be driven by workflow config.
-
-Each item includes:
-
-- `publication`
-- `title`
-- optional `link`
-- `summary`
-
-Current summary expectation:
-
-- plain-text string
-
-### `stanford` section
+### Configured item section
 
 Current expected fields:
 
@@ -164,13 +147,18 @@ Current expected fields:
 - `items`
 - optional `emptyText`
 
-The choice to emit this section type should be driven by workflow config.
+The choice to emit a configured item section should be driven by workflow config.
 
 Each item includes:
 
 - `title`
 - optional `link`
 - `summary`
+- optional `publication`
+
+Current item expectation:
+
+- plain-text string
 
 ## Content rules
 

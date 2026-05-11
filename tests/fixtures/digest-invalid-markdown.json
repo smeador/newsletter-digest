@@ -5,8 +5,7 @@
   "inventory": {
     "foundPrimary": ["NY Times Morning"],
     "missingPrimary": [],
-    "substackCount": 0,
-    "stanfordCount": 0
+    "extraCounts": {}
   },
   "sections": [
     {

@@ -71,7 +71,7 @@ Instead:
 
 - read `sourcePolicy.primary` from `/workspace/config/newsletter-digest.json`
 - read `sourcePolicy.extras` from `/workspace/config/newsletter-digest.json`
-- read `sourcePolicy.ignoreNotes` and apply those exclusions during source selection
+- apply the configured source and collection selection rules during source selection
 
 ## Retrieval rules
 
@@ -236,6 +236,7 @@ The formatter owns:
 - subject format:
   - use `delivery.subjectTemplate` from `/workspace/config/newsletter-digest.json`
 - use the configured `timezone` from `/workspace/config/newsletter-digest.json`
+- resolve `TIMEZONE` once from the config before building dates or finalizer arguments
 - send the digest as an HTML email with a plain-text fallback
 
 Before sending, write delivery artifacts under:
@@ -270,7 +271,7 @@ Hard rules:
 - use a local day directory such as `/workspace/memory/digests/YYYY-MM-DD/`
 - write `selected-message-ids.json` and `source-artifact-dirs.json` to temporary files for the finalizer input
 - finalize render + send with:
-  - `newsletter-digest-finalize --digest-json DIGEST_JSON --day-dir DAY_DIR --account "$ACCOUNT" --to "$TO" --subject SUBJECT --from "$ACCOUNT" --message-ids-json MESSAGE_IDS_JSON --source-artifacts-json SOURCE_ARTIFACTS_JSON`
+  - `newsletter-digest-finalize --digest-json DIGEST_JSON --day-dir DAY_DIR --account "$ACCOUNT" --to "$TO" --subject SUBJECT --from "$ACCOUNT" --timezone TIMEZONE --message-ids-json MESSAGE_IDS_JSON --source-artifacts-json SOURCE_ARTIFACTS_JSON`
 - the finalizer owns copying day-root artifacts, rendering `email.html` and `email.txt`, and invoking the send helper
 - the finalizer must write `digest.json`, `email.html`, `email.txt`, `summary.json`, and `send-result.json` into the final run record
 - only treat delivery as successful if the helper returns a Gmail id in either `send_result.message_id` or `send_result.messageId`
@@ -287,7 +288,7 @@ If delivery fails:
 
 If the request says `test mode`, `rerender`, or similar:
 
-- reuse matching source content from the same `24 hour` lookback window
+- reuse matching source content from the configured lookback window
 - ignore previously sent digest emails as source material
 - still send the email
 - do not reduce digest depth just because it is a test
