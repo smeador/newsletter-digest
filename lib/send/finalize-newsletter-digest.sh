@@ -11,6 +11,7 @@ Usage:
     --to TO_EMAIL \
     --subject SUBJECT \
     [--from FROM_EMAIL] \
+    [--timezone TIMEZONE] \
     [--message-ids-json MESSAGE_IDS_JSON] \
     [--source-artifacts-json SOURCE_ARTIFACTS_JSON]
 EOF
@@ -23,6 +24,7 @@ ACCOUNT_EMAIL=""
 TO_EMAIL=""
 SUBJECT=""
 FROM_EMAIL=""
+TIMEZONE="${NEWSLETTER_DIGEST_TIMEZONE:-}"
 MESSAGE_IDS_JSON=""
 SOURCE_ARTIFACTS_JSON=""
 
@@ -50,6 +52,10 @@ while [ $# -gt 0 ]; do
       ;;
     --from)
       FROM_EMAIL="${2:-}"
+      shift 2
+      ;;
+    --timezone)
+      TIMEZONE="${2:-}"
       shift 2
       ;;
     --message-ids-json)
@@ -126,6 +132,10 @@ SEND_ARGS=(
 
 if [ -n "${FROM_EMAIL}" ]; then
   SEND_ARGS+=(--from "${FROM_EMAIL}")
+fi
+
+if [ -n "${TIMEZONE}" ]; then
+  SEND_ARGS+=(--timezone "${TIMEZONE}")
 fi
 
 if [ -n "${MESSAGE_IDS_JSON}" ]; then

@@ -5,8 +5,18 @@
   "inventory": {
     "foundPrimary": ["NY Times Morning"],
     "missingPrimary": [],
-    "substackCount": 1,
-    "stanfordCount": 1
+    "extraCounts": {
+      "substack-review": {
+        "title": "Substack Review",
+        "count": 1,
+        "itemName": "items"
+      },
+      "stanford": {
+        "title": "Stanford",
+        "count": 1,
+        "itemName": "items"
+      }
+    }
   },
   "sections": [
     {
@@ -34,6 +44,7 @@
     },
     {
       "type": "substack_review",
+      "key": "substack-review",
       "title": "Substack Review",
       "items": [
         {
@@ -46,6 +57,7 @@
     },
     {
       "type": "stanford",
+      "key": "stanford",
       "title": "Stanford",
       "items": [
         {

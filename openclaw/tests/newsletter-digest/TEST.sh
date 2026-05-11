@@ -3,7 +3,15 @@ set -euo pipefail
 
 MESSAGE="${SKILL_TEST_MESSAGE:-${DIGEST_MESSAGE:-Run newsletter-digest now in test mode.}}"
 TIMEOUT_MS="${SKILL_TEST_TIMEOUT_MS:-${DIGEST_TEST_TIMEOUT_MS:-600000}}"
-JOB_NAME="newsletter-digest-test-$(TZ=America/Chicago date '+%Y%m%dT%H%M%S')-$$"
+CONFIG_PATH="${NEWSLETTER_DIGEST_CONFIG:-/workspace/config/newsletter-digest.json}"
+TIMEZONE="${NEWSLETTER_DIGEST_TIMEZONE:-}"
+
+if [ -z "${TIMEZONE}" ] && [ -f "${CONFIG_PATH}" ] && command -v jq >/dev/null 2>&1; then
+  TIMEZONE="$(jq -r '.timezone // empty' "${CONFIG_PATH}")"
+fi
+
+TIMEZONE="${TIMEZONE:-UTC}"
+JOB_NAME="newsletter-digest-test-$(TZ="${TIMEZONE}" date '+%Y%m%dT%H%M%S')-$$"
 
 job_json="$(
   openclaw cron add \

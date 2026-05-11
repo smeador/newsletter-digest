@@ -13,6 +13,8 @@ It handles the full pipeline:
 
 The goal is not just "summarize some emails." The goal is to produce a repeatable digest workflow with inspectable inputs, deterministic render output, and a clean send/archive boundary.
 
+The repo also provides parsing and construction logic around the agent workflow. Email extraction is normalized into stable artifacts before summarization, and final delivery is built from structured `digest.json` rather than freeform generated HTML. This makes the workflow more deterministic and substantially reduces token usage by keeping raw Gmail payloads, MIME blobs, repeated newsletter chrome, and renderer details out of the model handoff.
+
 ## What You Get
 
 A successful digest run produces:
@@ -39,13 +41,14 @@ At a high level, it:
 5. renders the digest into HTML and plain text
 6. sends the digest and archives the run
 
-The current workflow is opinionated about a few source categories:
+The current workflow is configured around source categories such as:
 
 - primary newsletters
-- Substack emails
-- Stanford newsletter emails
+- extra item collections
 
-Those opinions live at the skill layer. The lower-level package commands are more generally useful as extraction, validation, rendering, and send helpers.
+The orchestration mechanics live in the skills, while the workflow-specific source list and section policy live in config. The lower-level package commands are more generally useful as extraction, validation, rendering, and send helpers.
+
+- [config/newsletter-digest.json](config/newsletter-digest.json)
 
 ## How To Use It
 
@@ -72,6 +75,22 @@ This repo also exposes standalone commands for the main workflow boundaries:
 
 These commands let you use the pieces independently if you want a custom orchestration layer.
 
+## Workflow Config
+
+Workflow-specific behavior lives in [config/newsletter-digest.json](config/newsletter-digest.json).
+
+The config controls:
+
+- digest title, timezone, lookback window, and delivery subject template
+- primary source keys, titles, senders, query hints, and selection rules
+- link preferences, link cues, and disallowed link categories
+- source-specific formatting rules such as group titles, paragraph counts, bullet sections, and special-case issue formats
+- extra item collections, including section type, lookback window, exclusions, inventory label, item label, and item formatting rules
+
+The skills should read this config at runtime instead of hardcoding a specific newsletter mix. New formatter output should report extra collection counts through `inventory.extraCounts`, keyed by configured extra collection key.
+
+Full contract: [docs/contracts/workflow-config-contract.md](docs/contracts/workflow-config-contract.md)
+
 ## Workflow Shape
 
 The workflow is organized around a few stable boundaries:
@@ -87,7 +106,7 @@ Each selected email is converted into a cached artifact set with:
 
 This keeps downstream logic off of raw Gmail payloads.
 
-Contract: [docs/contracts/source-artifact-contract.md](/Users/sean/Repos/newsletter-digest/docs/contracts/source-artifact-contract.md)
+Contract: [docs/contracts/source-artifact-contract.md](docs/contracts/source-artifact-contract.md)
 
 ### 2. Digest Assembly
 
@@ -95,7 +114,7 @@ The formatter produces one `digest.json` object that becomes the canonical struc
 
 This is the handoff point between summarization and presentation.
 
-Contract: [docs/contracts/digest-json-contract.md](/Users/sean/Repos/newsletter-digest/docs/contracts/digest-json-contract.md)
+Contract: [docs/contracts/digest-json-contract.md](docs/contracts/digest-json-contract.md)
 
 ### 3. Rendering And Delivery
 
@@ -106,7 +125,7 @@ Once `digest.json` exists, the rest of the flow is deterministic:
 - archive artifacts
 - send the email
 
-Contract: [docs/contracts/render-send-contract.md](/Users/sean/Repos/newsletter-digest/docs/contracts/render-send-contract.md)
+Contract: [docs/contracts/render-send-contract.md](docs/contracts/render-send-contract.md)
 
 ## Repo Layout
 
@@ -115,6 +134,7 @@ Contract: [docs/contracts/render-send-contract.md](/Users/sean/Repos/newsletter-
 - `lib/render`: digest rendering logic
 - `lib/send`: validation, finalization, and email transport logic
 - `docs/contracts`: stable workflow contracts
+- `config`: workflow-specific source and formatting policy
 - `skills`: core skill definitions for digest orchestration, formatting, and delivery
 - `openclaw`: runtime-facing scripts and test harnesses for the intended execution environment
 
@@ -127,7 +147,7 @@ The repo is organized around that assumption:
 - the core skills live in `skills`
 - the OpenClaw runtime surface lives in `openclaw`
 - the runtime-facing manifest stays at `integration.json`
-- runtime expectations are documented in [docs/contracts/openclaw-runtime-expectations.md](/Users/sean/Repos/newsletter-digest/docs/contracts/openclaw-runtime-expectations.md)
+- runtime expectations are documented in [docs/contracts/openclaw-runtime-expectations.md](docs/contracts/openclaw-runtime-expectations.md)
 - the current runtime repo is [agent-lab](https://github.com/smeador/agent-lab)
 
 The repo still keeps the lower-level commands reusable, but the full orchestration model, artifact layout, and runtime assumptions are designed around OpenClaw rather than a generic pluggable runtime layer.

@@ -68,6 +68,70 @@ test("renderer produces HTML and text output from a valid digest fixture", () =>
   assert.match(text, /Issue link: https:\/\/example\.com\/nyt-issue/);
 });
 
+test("renderer supports configured item sections without hardcoded section types", () => {
+  const tempDir = makeTempDir("newsletter-render-generic-items");
+  const digestPath = join(tempDir, "digest.json");
+  const htmlOut = join(tempDir, "email.html");
+  const textOut = join(tempDir, "email.txt");
+
+  writeFileSync(
+    digestPath,
+    `${JSON.stringify(
+      {
+        title: "Newsletter Digest",
+        date: "May 8, 2026",
+        localDate: "2026-05-08",
+        inventory: {
+          foundPrimary: [],
+          missingPrimary: [],
+          extraCounts: {
+            research: {
+              title: "Research Desk",
+              count: 1,
+              itemName: "briefs",
+            },
+          },
+        },
+        sections: [
+          {
+            type: "research_digest",
+            key: "research",
+            title: "Research Desk",
+            items: [
+              {
+                title: "New benchmark",
+                link: "https://example.com/research",
+                summary: "The benchmark adds a clearer comparison for long-context retrieval systems.",
+              },
+            ],
+          },
+        ],
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+
+  runNode([
+    "bin/newsletter-digest-render.mjs",
+    "--input",
+    digestPath,
+    "--html-out",
+    htmlOut,
+    "--text-out",
+    textOut,
+  ]);
+
+  const html = readFileSync(htmlOut, "utf8");
+  const text = readFileSync(textOut, "utf8");
+
+  assert.match(html, /Research Desk/);
+  assert.match(html, /1 briefs/);
+  assert.match(text, /Included extras: 1 Research Desk briefs/);
+  assert.match(text, /New benchmark/);
+});
+
 test("renderer rejects placeholder prose that violates the digest contract", () => {
   const tempDir = makeTempDir("newsletter-render-bad");
   const htmlOut = join(tempDir, "email.html");

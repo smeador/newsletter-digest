@@ -16,6 +16,19 @@ Do not use this skill to invent the final digest structure from scratch. Use the
 
 once the source set is selected.
 
+At the start of the run, load the workflow policy from:
+
+- `/workspace/config/newsletter-digest.json`
+
+Treat that config as the source of truth for:
+
+- which sources are in scope
+- how those sources are queried and matched
+- which extra collections to include
+- issue-link preferences
+- output subject template
+- source-specific formatting expectations that need to be passed to the formatter
+
 ## Invocation rules
 
 Treat these requests as direct execution commands:
@@ -50,26 +63,21 @@ Examples of bash-only syntax to avoid in raw `exec` commands:
 - `[[ ... ]]`
 - process substitution
 
-## Sources in scope
+## Source policy
 
-### Primary newsletters
+Do not hardcode the publication list inside the run.
 
-- `NY Times Morning`
-- `Daily Upside`
-- `AI News` (`swyx+ainews@substack.com`)
+Instead:
 
-### Additional sections
-
-- Substack emails from the last `24 hours`
-- Stanford newsletter emails from the last `24 hours`
-
-Ignore GoodLinks and non-email sources.
+- read `sourcePolicy.primary` from `/workspace/config/newsletter-digest.json`
+- read `sourcePolicy.extras` from `/workspace/config/newsletter-digest.json`
+- apply the configured source and collection selection rules during source selection
 
 ## Retrieval rules
 
 ### Lookback window
 
-- default lookback: rolling `last 24 hours`
+- default to `lookbackHours` from `/workspace/config/newsletter-digest.json`
 - always do a historical pull; do not rely only on webhook or new-mail state
 - first fetch metadata/snippets for the lookback window
 - then fetch full bodies only for the messages you actually plan to use
@@ -157,60 +165,39 @@ Additional hard rule:
 
 - if you need individual message ids, derive them from `gog gmail search ... --json --no-input` results and then use the extractor; do not switch to `gog gmail messages search`
 
-### Fast-path senders
+### Source matching and selection
 
-Start with these:
+For each source in `sourcePolicy.primary`:
 
-- `NY Times Morning`: `nytdirect@nytimes.com`
-- `Daily Upside`: `squad@thedailyupside.com`
-- `AI News`: `swyx+ainews@substack.com`
+- start with its configured `queryHints` and `senders`
+- apply its configured `selectionRules`
+- if no valid issue is found, fall back to broader sender, subject, publication, and body matching before marking the source as missing
 
-If no valid issue is found, fall back to broader sender, subject, publication, and body matching before marking the source as missing.
+For each collection in `sourcePolicy.extras`:
 
-### Selection rules
-
-- for each primary newsletter, choose the newest valid issue in the active window
-- prefer the newest same-day issue in `America/Chicago` when one exists
-- if the digest runs shortly after the normal send time, explicitly check whether a newer same-day issue arrived after an earlier digest run
-- do not include `AI News` again in the Substack section
-
-### Daily Upside matching
-
-- do not rely on one exact sender forever
-- if a message plausibly looks like Daily Upside but sender formatting changed, inspect it
-- treat sender variants, wrappers, and aliases as eligible when the subject or publication clearly indicate Daily Upside
-- be aware that the Sunday edition may be a long-form single-feature format rather than the usual multi-story weekday structure
-- when handing a Sunday long-form edition to the formatter, preserve that fact so it is summarized as one main article instead of being forced into weekday sections
+- use its configured `lookbackHours` if present, otherwise inherit the workflow lookback window
+- apply any configured exclusions such as `excludeSourceKeys`
+- preserve enough metadata so the formatter can follow the collection's configured `itemRules`
 
 ## Link extraction rules
 
-Find one useful public link for every primary newsletter and every included Substack item.
+Find one useful public link for every selected source and every included extra item.
 
 ### Preferred links
 
-- for primary newsletters: issue-level browser version
-- for Substack: article page
-- for Stanford: useful public article page when one exists
+Use the configured `linkPreference` for each source or collection.
 
-Look for phrases such as:
+Look for the phrases configured in `sourcePolicy.linkCues`, such as:
 
 - `View in browser`
 - `Read in browser`
 - `Read online`
 
-Prefer those over generic publication pages.
+Prefer those over generic publication pages when they satisfy the configured `linkPreference`.
 
 ### Disallowed links
 
-Never use:
-
-- Gmail links
-- mailbox links
-- message-view links
-- thread-view links
-- unsubscribe/settings links
-- ad/sponsor links
-- image asset URLs
+Never use the categories listed in `sourcePolicy.disallowedLinks`.
 
 ## Formatter handoff
 
@@ -228,6 +215,7 @@ Pass it the selected source material cleanly:
 - curated links from `links.json`
 - metadata from `metadata.json`
 - only the relevant extracted content needed for summarization
+- the relevant source or collection config from `/workspace/config/newsletter-digest.json`, especially `formatRules`, `itemRules`, and any special-case notes
 
 The formatter must return structured digest JSON that matches its schema and is ready for the renderer. It must not return raw HTML.
 
@@ -246,8 +234,9 @@ The formatter owns:
 - send from the configured runtime workflow account in `GOG_ACCOUNT`
 - use `gog gmail send`, not SMTP
 - subject format:
-  - `Newsletter Digest - YYYY-MM-DD`
-- use the local date in `America/Chicago`
+  - use `delivery.subjectTemplate` from `/workspace/config/newsletter-digest.json`
+- use the configured `timezone` from `/workspace/config/newsletter-digest.json`
+- resolve `TIMEZONE` once from the config before building dates or finalizer arguments
 - send the digest as an HTML email with a plain-text fallback
 
 Before sending, write delivery artifacts under:
@@ -278,11 +267,11 @@ Hard rules:
 - include a plain-text fallback body for email compatibility
 - a plaintext-only send is not a successful digest send unless the user explicitly asked for plaintext-only
 - `digest.json` is the source of truth for final content
-- use local `America/Chicago` time for the run directory name
+- use the configured `timezone` for the run directory name
 - use a local day directory such as `/workspace/memory/digests/YYYY-MM-DD/`
 - write `selected-message-ids.json` and `source-artifact-dirs.json` to temporary files for the finalizer input
 - finalize render + send with:
-  - `newsletter-digest-finalize --digest-json DIGEST_JSON --day-dir DAY_DIR --account "$ACCOUNT" --to "$TO" --subject SUBJECT --from "$ACCOUNT" --message-ids-json MESSAGE_IDS_JSON --source-artifacts-json SOURCE_ARTIFACTS_JSON`
+  - `newsletter-digest-finalize --digest-json DIGEST_JSON --day-dir DAY_DIR --account "$ACCOUNT" --to "$TO" --subject SUBJECT --from "$ACCOUNT" --timezone TIMEZONE --message-ids-json MESSAGE_IDS_JSON --source-artifacts-json SOURCE_ARTIFACTS_JSON`
 - the finalizer owns copying day-root artifacts, rendering `email.html` and `email.txt`, and invoking the send helper
 - the finalizer must write `digest.json`, `email.html`, `email.txt`, `summary.json`, and `send-result.json` into the final run record
 - only treat delivery as successful if the helper returns a Gmail id in either `send_result.message_id` or `send_result.messageId`
@@ -299,14 +288,14 @@ If delivery fails:
 
 If the request says `test mode`, `rerender`, or similar:
 
-- reuse matching source content from the same `24 hour` lookback window
+- reuse matching source content from the configured lookback window
 - ignore previously sent digest emails as source material
 - still send the email
 - do not reduce digest depth just because it is a test
 - execute the digest workflow directly inside the current run
 - do not invoke `/workspace/scripts/run-digest-test-via-cron.sh`
 - do not create another temporary cron job or nested test wrapper from inside this skill run
-- if you need the local date in shell, use `TZ=America/Chicago date '+%F'`; do not assume `python3` is installed
+- if you need the local date in shell, use `TZ="$(jq -r '.timezone' /workspace/config/newsletter-digest.json)" date '+%F'`; do not assume `python3` is installed
 
 ## Constraints
 
