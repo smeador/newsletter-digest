@@ -1,8 +1,42 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ensureDir, makeTempDir, readJson, repoRoot, runBash, writeExecutable, writeJson } from "./helpers.mjs";
+
+function loadDotEnv() {
+  try {
+    const contents = readFileSync(join(repoRoot, ".env"), "utf8");
+    for (const line of contents.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const match = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
+      if (!match) continue;
+      const [, key, rawValue] = match;
+      if (process.env[key] !== undefined) continue;
+      process.env[key] = rawValue.replace(/^["']|["']$/g, "");
+    }
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+  }
+}
+
+loadDotEnv();
+
+function readWorkflowConfig() {
+  const configPath = join(repoRoot, process.env.NEWSLETTER_DIGEST_CONFIG ?? "config/newsletter-digest.json");
+  const fallbackPath = join(repoRoot, "config/newsletter-digest.example.json");
+  const selectedPath = existsSync(configPath) ? configPath : fallbackPath;
+  return readJson(selectedPath);
+}
+
+const workflowConfig = readWorkflowConfig();
+const testAccount = process.env.NEWSLETTER_DIGEST_TEST_ACCOUNT ?? process.env.GOG_ACCOUNT ?? "workflow@example.com";
+const testRecipient = process.env.NEWSLETTER_DIGEST_TEST_RECIPIENT ?? workflowConfig.delivery?.defaultRecipient ?? "recipient@example.com";
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 test("finalize script validates, renders, copies artifacts, and delegates send", () => {
   const tempDir = makeTempDir("newsletter-finalize");
@@ -60,9 +94,9 @@ echo "send:$*" >> "${logPath}"
       "--day-dir",
       dayDir,
       "--account",
-      "pip@meador.me",
+      testAccount,
       "--to",
-      "sean@meador.me",
+      testRecipient,
       "--subject",
       "Newsletter Digest - 2026-05-08",
       "--message-ids-json",
@@ -87,7 +121,10 @@ echo "send:$*" >> "${logPath}"
   const log = readFileSync(logPath, "utf8");
   assert.match(log, /validate:--input .*day\/digest\.json --write/);
   assert.match(log, /render:--input .*day\/digest\.json --html-out .*day\/email\.html --text-out .*day\/email\.txt/);
-  assert.match(log, /send:--account pip@meador\.me --to sean@meador\.me --subject Newsletter Digest - 2026-05-08/);
+  assert.match(
+    log,
+    new RegExp(`send:--account ${escapeRegExp(testAccount)} --to ${escapeRegExp(testRecipient)} --subject Newsletter Digest - 2026-05-08`),
+  );
 });
 
 test("send script archives artifacts and succeeds when gog returns a message id", () => {
@@ -123,9 +160,9 @@ printf '{"message_id":"gmail-123"}\\n'
     join(repoRoot, "lib/send/send-gog-digest.sh"),
     [
       "--account",
-      "pip@meador.me",
+      testAccount,
       "--to",
-      "sean@meador.me",
+      testRecipient,
       "--subject",
       "Newsletter Digest - 2026-05-08",
       "--digest-json",
@@ -151,9 +188,12 @@ printf '{"message_id":"gmail-123"}\\n'
   const runDir = output.run_dir;
   assert.equal(readdirSync(dayDir).length, 1);
   assert.equal(readJson(output.result_file).message_id, "gmail-123");
-  assert.equal(readJson(output.summary_file).recipient, "sean@meador.me");
+  assert.equal(readJson(output.summary_file).recipient, testRecipient);
   assert.match(readFileSync(join(runDir, "email.html"), "utf8"), /Rendered HTML/);
-  assert.match(readFileSync(gogLogPath, "utf8"), /gmail send --account pip@meador\.me --to sean@meador\.me/);
+  assert.match(
+    readFileSync(gogLogPath, "utf8"),
+    new RegExp(`gmail send --account ${escapeRegExp(testAccount)} --to ${escapeRegExp(testRecipient)}`),
+  );
 });
 
 test("send script fails when gog does not report a Gmail message id", () => {
@@ -179,9 +219,9 @@ printf '{"status":"ok"}\\n'
     join(repoRoot, "lib/send/send-gog-digest.sh"),
     [
       "--account",
-      "pip@meador.me",
+      testAccount,
       "--to",
-      "sean@meador.me",
+      testRecipient,
       "--subject",
       "Newsletter Digest - 2026-05-08",
       "--text-file",

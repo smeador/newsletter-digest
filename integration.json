@@ -8,7 +8,7 @@
   },
   "workspaceFiles": [
     {
-      "source": "config/newsletter-digest.json",
+      "source": "config/newsletter-digest.example.json",
       "target": "config/newsletter-digest.json"
     }
   ],

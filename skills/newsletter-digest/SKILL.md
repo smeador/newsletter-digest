@@ -91,9 +91,9 @@ Resolve the workflow Gmail account once at the start of the run:
 
 If the request does not explicitly provide a digest recipient, resolve the default recipient from the newest prior digest summary:
 
-- read the most recent `/workspace/memory/digests/*/summary.json`
-- reuse its `recipient` field
-- if no prior summary exists, stop and report that no default recipient could be determined
+- first use `delivery.defaultRecipient` from `/workspace/config/newsletter-digest.json` when present
+- otherwise, if `delivery.defaultRecipientFromPreviousSummary` is true, read the most recent `/workspace/memory/digests/*/summary.json` and reuse its `recipient` field
+- if neither config nor prior summary provides a recipient, stop and report that no default recipient could be determined
 
 Use `gog` in this exact retrieval flow:
 
@@ -107,15 +107,15 @@ Command-shape rules:
 
 - the Gmail search query is a positional argument, not a `--query` flag
 - valid example:
-  - `gog gmail search "from:nytdirect@nytimes.com newer_than:2d -label:sent" --account "$ACCOUNT" --json --results-only --no-input`
+  - `gog gmail search "from:newsletter@example.com newer_than:2d -label:sent" --account "$ACCOUNT" --json --results-only --no-input`
 - invalid example:
-  - `gog gmail search --query "from:nytdirect@nytimes.com newer_than:2d -label:sent" --account "$ACCOUNT" --json --no-input`
+  - `gog gmail search --query "from:newsletter@example.com newer_than:2d -label:sent" --account "$ACCOUNT" --json --no-input`
 
 Account rules:
 
 - all Gmail retrieval and send commands in this workflow must use the configured runtime workflow account from `GOG_ACCOUNT`
 - do not substitute the recipient email, the current human user email, or an inferred account name
-- when no recipient is explicitly provided, reuse the newest prior digest recipient from `/workspace/memory/digests/*/summary.json`
+- when no recipient is explicitly provided, resolve the recipient from workflow config or the newest prior digest recipient as described above
 - if a Gmail command fails because of an unknown flag or command-shape mismatch, inspect `gog gmail search --help` or the relevant `gog` help output before retrying
 
 The extractor also writes inspectable artifacts and cache files under:

@@ -48,7 +48,7 @@ The current workflow is configured around source categories such as:
 
 The orchestration mechanics live in the skills, while the workflow-specific source list and section policy live in config. The lower-level package commands are more generally useful as extraction, validation, rendering, and send helpers.
 
-- [config/newsletter-digest.json](config/newsletter-digest.json)
+- [config/newsletter-digest.example.json](config/newsletter-digest.example.json)
 
 ## How To Use It
 
@@ -77,17 +77,17 @@ These commands let you use the pieces independently if you want a custom orchest
 
 ## Workflow Config
 
-Workflow-specific behavior lives in [config/newsletter-digest.json](config/newsletter-digest.json).
+Workflow-specific behavior lives in `config/newsletter-digest.json` at runtime. The committed reference file is [config/newsletter-digest.example.json](config/newsletter-digest.example.json); local/private `config/newsletter-digest.json` files are intentionally ignored.
 
 The config controls:
 
-- digest title, timezone, lookback window, and delivery subject template
+- digest title, timezone, lookback window, delivery subject template, and default recipient
 - primary source keys, titles, senders, query hints, and selection rules
 - link preferences, link cues, and disallowed link categories
 - source-specific formatting rules such as group titles, paragraph counts, bullet sections, and special-case issue formats
 - extra item collections, including section type, lookback window, exclusions, inventory label, item label, and item formatting rules
 
-The skills should read this config at runtime instead of hardcoding a specific newsletter mix. New formatter output should report extra collection counts through `inventory.extraCounts`, keyed by configured extra collection key.
+The skills should read this config at runtime instead of hardcoding a specific newsletter mix. New formatter output should report extra collection counts through `inventory.extraCounts`, keyed by configured extra collection key. The workflow Gmail account is still runtime environment, supplied through `GOG_ACCOUNT`.
 
 Full contract: [docs/contracts/workflow-config-contract.md](docs/contracts/workflow-config-contract.md)
 
@@ -148,6 +148,5 @@ The repo is organized around that assumption:
 - the OpenClaw runtime surface lives in `openclaw`
 - the runtime-facing manifest stays at `integration.json`
 - runtime expectations are documented in [docs/contracts/openclaw-runtime-expectations.md](docs/contracts/openclaw-runtime-expectations.md)
-- the current runtime repo is [agent-lab](https://github.com/smeador/agent-lab)
 
 The repo still keeps the lower-level commands reusable, but the full orchestration model, artifact layout, and runtime assumptions are designed around OpenClaw rather than a generic pluggable runtime layer.

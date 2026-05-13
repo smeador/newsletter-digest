@@ -112,7 +112,7 @@ Current expected fields:
 
 The exact group titles and counts for a given source may be driven by:
 
-- [workflow-config-contract.md](/Users/sean/Repos/newsletter-digest/docs/contracts/workflow-config-contract.md)
+- [workflow-config-contract.md](workflow-config-contract.md)
 
 #### `groups`
 

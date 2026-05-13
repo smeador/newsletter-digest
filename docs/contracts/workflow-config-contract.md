@@ -12,7 +12,7 @@ Current default path:
 
 In this repo, the committed reference file lives at:
 
-- `config/newsletter-digest.json`
+- `config/newsletter-digest.example.json`
 
 ## Purpose
 
@@ -48,6 +48,7 @@ Current top-level fields:
 Current expected fields:
 
 - `subjectTemplate`
+- `defaultRecipient`
 - `defaultRecipientFromPreviousSummary`
 - `transport`
 
@@ -56,6 +57,8 @@ Current expected fields:
 Current example:
 
 - `Newsletter Digest - {{localDate}}`
+
+`defaultRecipient` is optional. If present, the workflow can use it when the caller does not pass an explicit recipient. If `defaultRecipientFromPreviousSummary` is true and no `defaultRecipient` is present, the workflow may fall back to the newest prior digest summary recipient.
 
 ## Source policy
 
@@ -111,7 +114,7 @@ The config should describe policy, not renderer internals.
 
 The current renderer still expects the digest JSON contract documented in:
 
-- [digest-json-contract.md](/Users/sean/Repos/newsletter-digest/docs/contracts/digest-json-contract.md)
+- [digest-json-contract.md](digest-json-contract.md)
 
 That means this config may influence:
 

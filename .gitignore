@@ -1,3 +1,8 @@
 node_modules/
 workspace/memory/
 .DS_Store
+.env
+.env.*
+!.env.example
+config/newsletter-digest.json
+config/*.local.json

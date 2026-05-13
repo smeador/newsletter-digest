@@ -1,22 +1,23 @@
 {
   "title": "Newsletter Digest",
-  "timezone": "America/Chicago",
+  "timezone": "Etc/UTC",
   "lookbackHours": 24,
   "delivery": {
     "subjectTemplate": "Newsletter Digest - {{localDate}}",
+    "defaultRecipient": "recipient@example.com",
     "defaultRecipientFromPreviousSummary": true,
     "transport": "gog gmail send"
   },
   "sourcePolicy": {
     "primary": [
       {
-        "key": "nyt",
-        "title": "NY Times Morning",
+        "key": "morning-brief",
+        "title": "Morning Brief",
         "senders": [
-          "nytdirect@nytimes.com"
+          "morning@example.com"
         ],
         "queryHints": [
-          "from:nytdirect@nytimes.com newer_than:2d -label:sent"
+          "from:morning@example.com newer_than:2d -label:sent"
         ],
         "linkPreference": "issue-level browser version",
         "selectionRules": [
@@ -32,7 +33,7 @@
               "minParagraphs": 2,
               "maxParagraphs": 3,
               "notes": [
-                "Explain the lead story clearly and with real detail."
+                "Explain the lead story clearly and with concrete detail."
               ]
             },
             {
@@ -47,13 +48,13 @@
         }
       },
       {
-        "key": "daily-upside",
-        "title": "Daily Upside",
+        "key": "business-brief",
+        "title": "Business Brief",
         "senders": [
-          "squad@thedailyupside.com"
+          "business@example.com"
         ],
         "queryHints": [
-          "from:squad@thedailyupside.com newer_than:2d -label:sent"
+          "from:business@example.com newer_than:2d -label:sent"
         ],
         "linkPreference": "issue-level browser version",
         "selectionRules": [
@@ -78,14 +79,14 @@
               "useArticleTitlesAsGroupTitles": true
             },
             {
-              "title": "Extra Upside",
+              "title": "Extra notes",
               "kind": "paragraphs",
               "optional": true
             }
           ],
           "specialCases": [
             {
-              "name": "Sunday long-form edition",
+              "name": "Single-feature edition",
               "trigger": "one main feature instead of the usual opener-plus-multiple-story format",
               "groups": [
                 {
@@ -96,20 +97,20 @@
                 }
               ],
               "notes": [
-                "Do not fabricate weekday-specific sections when the source does not support them."
+                "Do not fabricate recurring sections when the source does not support them."
               ]
             }
           ]
         }
       },
       {
-        "key": "ai-news",
-        "title": "AI News",
+        "key": "technology-brief",
+        "title": "Technology Brief",
         "senders": [
-          "swyx+ainews@substack.com"
+          "technology@example.com"
         ],
         "queryHints": [
-          "from:swyx+ainews@substack.com newer_than:2d -label:sent"
+          "from:technology@example.com newer_than:2d -label:sent"
         ],
         "linkPreference": "issue-level browser version",
         "selectionRules": [
@@ -126,7 +127,7 @@
               "maxParagraphs": 3
             },
             {
-              "title": "Twitter roundup",
+              "title": "Roundup",
               "kind": "bullets",
               "notes": [
                 "Each bullet should be 1-2 descriptive sentences.",
@@ -139,28 +140,28 @@
     ],
     "extras": [
       {
-        "key": "substack-review",
-        "title": "Substack Review",
-        "sectionType": "substack_review",
-        "inventoryLabel": "Substack Review",
+        "key": "independent-review",
+        "title": "Independent Review",
+        "sectionType": "item_review",
+        "inventoryLabel": "Independent Review",
         "itemName": "items",
         "lookbackHours": 24,
         "linkPreference": "article page",
         "excludeSourceKeys": [
-          "ai-news"
+          "technology-brief"
         ],
         "itemRules": [
           "Include one bullet per included item.",
-          "Start with the publication name.",
+          "Start with the publication name when available.",
           "Use a separate link field when available.",
           "Write a 2-3 sentence summary in plain text."
         ]
       },
       {
-        "key": "stanford",
-        "title": "Stanford",
-        "sectionType": "stanford",
-        "inventoryLabel": "Stanford",
+        "key": "research-updates",
+        "title": "Research Updates",
+        "sectionType": "research_updates",
+        "inventoryLabel": "Research Updates",
         "itemName": "items",
         "lookbackHours": 24,
         "linkPreference": "useful public article page when one exists",
