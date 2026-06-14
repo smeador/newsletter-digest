@@ -79,8 +79,11 @@ Instead:
 
 - default to `lookbackHours` from `/workspace/config/newsletter-digest.json`
 - always do a historical pull; do not rely only on webhook or new-mail state
+- compute the cutoff once at the start of the run as `now - lookbackHours`
+- treat the cutoff as strict: do not select any source or extra item older than the configured lookback window
 - first fetch metadata/snippets for the lookback window
 - then fetch full bodies only for the messages you actually plan to use
+- Gmail query hints may overfetch because Gmail date operators are coarse; filter candidates by message timestamp after search before selecting or extracting
 
 ### Gmail command pattern
 
@@ -171,11 +174,13 @@ For each source in `sourcePolicy.primary`:
 
 - start with its configured `queryHints` and `senders`
 - apply its configured `selectionRules`
-- if no valid issue is found, fall back to broader sender, subject, publication, and body matching before marking the source as missing
+- if no valid issue is found within the strict lookback window, fall back to broader sender, subject, publication, and body matching before marking the source as missing
+- fallback matching must stay inside the strict lookback window; never pull an older issue just because the source has no weekend or delayed article
 
 For each collection in `sourcePolicy.extras`:
 
 - use its configured `lookbackHours` if present, otherwise inherit the workflow lookback window
+- apply the same strict cutoff rule before including an extra item
 - apply any configured exclusions such as `excludeSourceKeys`
 - preserve enough metadata so the formatter can follow the collection's configured `itemRules`
 

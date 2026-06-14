@@ -43,6 +43,8 @@ Current top-level fields:
 - `delivery`
 - `sourcePolicy`
 
+`lookbackHours` defines a strict message-selection window in hours. The workflow may use broader Gmail query hints to fetch candidate metadata when Gmail search syntax is coarse, but selected primary sources and extra items must have message timestamps inside the configured lookback window.
+
 ## Delivery fields
 
 Current expected fields:
@@ -96,6 +98,8 @@ Each extra collection entry currently includes:
 - `itemRules`
 
 `extras` may also include collection-specific exclusion fields such as `excludeSourceKeys`.
+
+When an extra collection has its own `lookbackHours`, that value overrides the top-level window for that collection only. It is still a strict cutoff, not a soft preference.
 
 ## Formatting rules
 

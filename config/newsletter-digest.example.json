@@ -1,7 +1,7 @@
 {
   "title": "Newsletter Digest",
   "timezone": "Etc/UTC",
-  "lookbackHours": 24,
+  "lookbackHours": 36,
   "delivery": {
     "subjectTemplate": "Newsletter Digest - {{localDate}}",
     "defaultRecipient": "recipient@example.com",
@@ -145,7 +145,7 @@
         "sectionType": "item_review",
         "inventoryLabel": "Independent Review",
         "itemName": "items",
-        "lookbackHours": 24,
+        "lookbackHours": 36,
         "linkPreference": "article page",
         "excludeSourceKeys": [
           "technology-brief"
@@ -163,7 +163,7 @@
         "sectionType": "research_updates",
         "inventoryLabel": "Research Updates",
         "itemName": "items",
-        "lookbackHours": 24,
+        "lookbackHours": 36,
         "linkPreference": "useful public article page when one exists",
         "itemRules": [
           "Include one bullet per included item.",
@@ -174,7 +174,9 @@
     ],
     "generalSelectionRules": [
       "always do a historical pull; do not rely only on webhook or new-mail state",
-      "first fetch metadata/snippets for the lookback window, then fetch full bodies only for selected messages"
+      "first fetch metadata/snippets for the lookback window, then fetch full bodies only for selected messages",
+      "use a strict 36-hour cutoff from the run start time; reject messages older than the configured lookback window even when Gmail query hints overfetch",
+      "fallback matching may broaden sender, subject, publication, and body clues, but must never broaden the configured lookback window"
     ],
     "linkCues": [
       "View in browser",
