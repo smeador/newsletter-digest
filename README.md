@@ -15,6 +15,19 @@ The goal is not just "summarize some emails." The goal is to produce a repeatabl
 
 The repo also provides parsing and construction logic around the agent workflow. Email extraction is normalized into stable artifacts before summarization, and final delivery is built from structured `digest.json` rather than freeform generated HTML. This makes the workflow more deterministic and substantially reduces token usage by keeping raw Gmail payloads, MIME blobs, repeated newsletter chrome, and renderer details out of the model handoff.
 
+## OpenClaw Runtime
+
+OpenClaw is the intended way to run this workflow end to end. The companion runtime used for this workflow lives at [smeador/claw-gcp-runtime](https://github.com/smeador/claw-gcp-runtime), but the package can work with any OpenClaw runtime after a small amount of setup for skills, config, environment, and scheduled execution.
+
+The repo is organized around that assumption:
+
+- the core skills live in `skills`
+- the OpenClaw runtime surface lives in `openclaw`
+- the runtime-facing manifest stays at `integration.json`
+- runtime expectations are documented in [docs/contracts/openclaw-runtime-expectations.md](docs/contracts/openclaw-runtime-expectations.md)
+
+The repo still keeps the lower-level commands reusable, but the full orchestration model, artifact layout, and runtime assumptions are designed around OpenClaw rather than a generic pluggable runtime layer.
+
 ## What You Get
 
 A successful digest run produces:
@@ -137,16 +150,3 @@ Contract: [docs/contracts/render-send-contract.md](docs/contracts/render-send-co
 - `config`: workflow-specific source and formatting policy
 - `skills`: core skill definitions for digest orchestration, formatting, and delivery
 - `openclaw`: runtime-facing scripts and test harnesses for the intended execution environment
-
-## OpenClaw Runtime
-
-OpenClaw is the intended way to run this workflow end to end.
-
-The repo is organized around that assumption:
-
-- the core skills live in `skills`
-- the OpenClaw runtime surface lives in `openclaw`
-- the runtime-facing manifest stays at `integration.json`
-- runtime expectations are documented in [docs/contracts/openclaw-runtime-expectations.md](docs/contracts/openclaw-runtime-expectations.md)
-
-The repo still keeps the lower-level commands reusable, but the full orchestration model, artifact layout, and runtime assumptions are designed around OpenClaw rather than a generic pluggable runtime layer.
