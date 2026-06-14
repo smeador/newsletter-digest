@@ -63,7 +63,9 @@ test("renderer produces HTML and text output from a valid digest fixture", () =>
 
   assert.match(html, /Newsletter Digest/);
   assert.match(html, /NY Times Morning/);
+  assert.match(html, /Found:<\/strong> 1 of 1 primary newsletter/);
   assert.match(html, /Issue link/);
+  assert.match(text, /Found primary newsletters: 1 of 1 primary newsletter \(NY Times Morning\)/);
   assert.match(text, /Substack Review/);
   assert.match(text, /Issue link: https:\/\/example\.com\/nyt-issue/);
 });
