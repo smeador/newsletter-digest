@@ -45,7 +45,21 @@ That makes the workflow useful both for direct delivery and for debugging, audit
 
 The main skill is `newsletter-digest`.
 
-At a high level, it:
+The skill is a lightweight OpenClaw entry point. It invokes the stable runner command and reports the result:
+
+```bash
+newsletter-digest-run --mode send
+```
+
+For test mode it invokes:
+
+```bash
+newsletter-digest-run --mode test-send
+```
+
+The skill should not search Gmail, inspect workspace artifacts, hand-edit JSON, or rediscover implementation files. The runner owns the production control loop.
+
+At a high level, the runner:
 
 1. finds the newest relevant newsletter issues in the active time window
 2. extracts each selected message into a stable artifact set
@@ -81,12 +95,61 @@ The Gmail delivery helper skill is `gmail-send`.
 This repo also exposes standalone commands for the main workflow boundaries:
 
 - `newsletter-digest-extract`: extract one Gmail message into cached source artifacts
+- `newsletter-digest-run`: run the bounded production workflow
 - `newsletter-digest-validate`: validate and normalize `digest.json`
 - `newsletter-digest-render`: render `digest.json` into `email.html` and `email.txt`
 - `newsletter-digest-finalize`: validate, render, archive, and send a digest run
 - `newsletter-digest-send`: send pre-rendered HTML and plain-text email bodies
 
 These commands let you use the pieces independently if you want a custom orchestration layer.
+
+### Runner Modes
+
+```bash
+newsletter-digest-run --mode dry-run
+newsletter-digest-run --mode test-send
+newsletter-digest-run --mode send
+```
+
+- `dry-run` performs deterministic candidate search and selection planning, then writes `candidate-summary.json`.
+- `test-send` and `send` continue through extraction, bounded model formatting, validation, rendering, delivery, and `usage-summary.json`.
+
+The runner uses `GOG_ACCOUNT` for Gmail access unless `--account` is provided.
+
+### Bounded Model Backend
+
+The runner isolates model work behind a bounded JSON command interface. It uses deterministic code for retrieval, strict lookback filtering, artifact validation, and send orchestration.
+
+The model backend is only responsible for JSON tasks such as:
+
+- candidate adjudication when deterministic scoring is ambiguous
+- digest formatting from compact `formatter-input.json`
+
+By default the runner expects the bundled OpenClaw adapter command:
+
+```bash
+newsletter-digest-run --mode send
+```
+
+That default command is `newsletter-digest-openclaw-model`, which calls:
+
+```bash
+openclaw infer model run --gateway --json
+```
+
+You can override it:
+
+```bash
+NEWSLETTER_DIGEST_MODEL_COMMAND="..." newsletter-digest-run --mode send
+```
+
+The command receives:
+
+- `NEWSLETTER_DIGEST_MODEL_TASK`
+- `NEWSLETTER_DIGEST_MODEL_INPUT`
+- `NEWSLETTER_DIGEST_MODEL_OUTPUT`
+
+It must read the input JSON and write valid output JSON. This is the integration point for a bounded OpenClaw one-shot model call.
 
 ## Workflow Config
 

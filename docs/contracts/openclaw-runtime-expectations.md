@@ -2,7 +2,7 @@
 
 This contract defines what the newsletter workflow may assume about the OpenClaw runtime environment.
 
-The skill is the agent-facing entry point.
+The skill is the agent-facing entry point. The stable production workflow entry point is the `newsletter-digest-run` command that the skill invokes.
 
 This document covers the environment-facing promises that make the skill usable.
 
@@ -65,6 +65,28 @@ The workflow may assume that helper entry points are available either through:
 
 The workflow should prefer stable package commands over inlining long command logic.
 
+Required package commands for a full production run:
+
+- `newsletter-digest-run`
+- `newsletter-digest-openclaw-model`
+- `newsletter-digest-extract`
+- `newsletter-digest-validate`
+- `newsletter-digest-render`
+- `newsletter-digest-finalize`
+- `newsletter-digest-send`
+
+### Bounded model command
+
+The production runner may call back into OpenClaw for bounded JSON tasks. By default it uses `newsletter-digest-openclaw-model`, which calls `openclaw infer model run --gateway --json`. The runtime may override this through `NEWSLETTER_DIGEST_MODEL_COMMAND` or `newsletter-digest-run --model-command`.
+
+The command receives:
+
+- `NEWSLETTER_DIGEST_MODEL_TASK`
+- `NEWSLETTER_DIGEST_MODEL_INPUT`
+- `NEWSLETTER_DIGEST_MODEL_OUTPUT`
+
+It must read the input JSON and write valid output JSON. It should not perform Gmail retrieval, filesystem discovery, rendering, or sending.
+
 ## Runtime-specific path expectations
 
 ### Docker-local / cloud
@@ -99,8 +121,16 @@ These values are workflow configuration, not universal adapter requirements.
 The core skill layer owns:
 
 - workflow invocation semantics
-- retrieval/synthesis instructions
-- how to use the available helpers
+- running `newsletter-digest-run`
+- reporting the runner result
+
+The `newsletter-digest-run` command owns:
+
+- retrieval and source selection
+- strict lookback enforcement
+- extraction/cache validation
+- bounded model handoffs
+- validation, rendering, sending, and run artifacts
 
 The OpenClaw runtime layer owns:
 
@@ -121,5 +151,6 @@ Examples:
 - configured Gmail auth missing
 - writable scratch path missing
 - package command or skill test entrypoint not found
+- bounded model command not configured for send modes
 
 These should be treated as environment/runtime failures, not as reasons for the skill to invent a new execution path.

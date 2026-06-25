@@ -20,6 +20,14 @@
     {
       "name": "render-help",
       "command": ["newsletter-digest-render", "--help"]
+    },
+    {
+      "name": "run-help",
+      "command": ["newsletter-digest-run", "--help"]
+    },
+    {
+      "name": "openclaw-model-help",
+      "command": ["newsletter-digest-openclaw-model", "--help"]
     }
   ]
 }
