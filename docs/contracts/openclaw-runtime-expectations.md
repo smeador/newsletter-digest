@@ -77,7 +77,7 @@ Required package commands for a full production run:
 
 ### Bounded model command
 
-The production runner may call back into OpenClaw for bounded JSON tasks. By default it uses `newsletter-digest-openclaw-model`, which calls `openclaw infer model run --gateway --json`. The runtime may override this through `NEWSLETTER_DIGEST_MODEL_COMMAND` or `newsletter-digest-run --model-command`.
+The production runner may call back into OpenClaw for bounded JSON tasks. By default it uses `newsletter-digest-openclaw-model`. Candidate selection tasks call `openclaw infer model run --gateway --json`; digest formatting calls `openclaw agent` with input and output file paths so the agent can read `formatter-input.json` from disk instead of receiving the whole formatter payload as a command-line argument. The runtime may override this through `NEWSLETTER_DIGEST_MODEL_COMMAND` or `newsletter-digest-run --model-command`.
 
 The command receives:
 
@@ -85,7 +85,7 @@ The command receives:
 - `NEWSLETTER_DIGEST_MODEL_INPUT`
 - `NEWSLETTER_DIGEST_MODEL_OUTPUT`
 
-It must read the input JSON and write valid output JSON. It should not perform Gmail retrieval, filesystem discovery, rendering, or sending.
+It must read the input JSON and write valid output JSON. It should not perform Gmail retrieval, filesystem discovery beyond the provided paths, rendering, or sending.
 
 ## Runtime-specific path expectations
 

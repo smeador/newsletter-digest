@@ -68,3 +68,47 @@ test("extractor reuses cached extracted.json when artifact set is already valid"
   const secondRun = readJson(outputPath);
   assert.equal(secondRun.metadata.subject, "Cached Subject");
 });
+
+test("extractor falls back to raw text when cleaned HTML yields empty markdown", () => {
+  const tempDir = makeTempDir("newsletter-extract-raw-fallback");
+  const inputPath = join(tempDir, "message.json");
+  const artifactDir = join(tempDir, "artifacts");
+  const outputPath = join(tempDir, "extracted.json");
+
+  writeFileSync(
+    inputPath,
+    `${JSON.stringify({
+      message: {
+        id: "raw-fallback",
+        threadId: "raw-fallback-thread",
+        snippet: "",
+        payload: {
+          headers: [
+            { name: "Subject", value: "Raw fallback issue" },
+            { name: "From", value: "Example <example@substack.com>" },
+          ],
+        },
+      },
+      body: "<html><body><picture>Important article text survived raw extraction.</picture></body></html>",
+    })}\n`,
+    "utf8",
+  );
+
+  runNode([
+    "bin/newsletter-digest-extract.mjs",
+    "--input",
+    inputPath,
+    "--artifact-dir",
+    artifactDir,
+    "--output",
+    outputPath,
+  ]);
+
+  const extracted = readJson(outputPath);
+  const cleanMarkdown = readFileSync(join(artifactDir, "clean.md"), "utf8");
+
+  assert.equal(extracted.content.sourceBody, "html");
+  assert.match(cleanMarkdown, /Important article text survived raw extraction/);
+  assert.ok(extracted.diagnostics.rawTextChars > 0);
+  assert.ok(extracted.diagnostics.markdownChars > 0);
+});

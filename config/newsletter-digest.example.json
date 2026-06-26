@@ -146,6 +146,11 @@
         "inventoryLabel": "Independent Review",
         "itemName": "items",
         "lookbackHours": 36,
+        "maxSelectedItems": 8,
+        "maxCleanMarkdownChars": 2500,
+        "gmailLabels": [
+          "substack"
+        ],
         "linkPreference": "article page",
         "excludeSourceKeys": [
           "technology-brief"
@@ -164,6 +169,10 @@
         "inventoryLabel": "Research Updates",
         "itemName": "items",
         "lookbackHours": 36,
+        "maxCleanMarkdownChars": 5000,
+        "gmailLabels": [
+          "stanford"
+        ],
         "linkPreference": "useful public article page when one exists",
         "itemRules": [
           "Include one bullet per included item.",

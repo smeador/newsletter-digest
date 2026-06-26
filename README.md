@@ -123,6 +123,7 @@ The runner isolates model work behind a bounded JSON command interface. It uses 
 The model backend is only responsible for JSON tasks such as:
 
 - candidate adjudication when deterministic scoring is ambiguous
+- extra item filtering from bounded Gmail label/query results
 - digest formatting from compact `formatter-input.json`
 
 By default the runner expects the bundled OpenClaw adapter command:
@@ -131,11 +132,13 @@ By default the runner expects the bundled OpenClaw adapter command:
 newsletter-digest-run --mode send
 ```
 
-That default command is `newsletter-digest-openclaw-model`, which calls:
+That default command is `newsletter-digest-openclaw-model`. Candidate selection uses:
 
 ```bash
 openclaw infer model run --gateway --json
 ```
+
+Digest formatting uses an OpenClaw agent file handoff. The adapter gives the agent the formatter input and output paths, and the agent reads `formatter-input.json` from disk and writes the final digest JSON to the requested output path.
 
 You can override it:
 
@@ -149,7 +152,7 @@ The command receives:
 - `NEWSLETTER_DIGEST_MODEL_INPUT`
 - `NEWSLETTER_DIGEST_MODEL_OUTPUT`
 
-It must read the input JSON and write valid output JSON. This is the integration point for a bounded OpenClaw one-shot model call.
+It must read the input JSON and write valid output JSON. This is the integration point for bounded OpenClaw JSON tasks.
 
 ## Workflow Config
 
@@ -161,9 +164,9 @@ The config controls:
 - primary source keys, titles, senders, query hints, and selection rules
 - link preferences, link cues, and disallowed link categories
 - source-specific formatting rules such as group titles, paragraph counts, bullet sections, and special-case issue formats
-- extra item collections, including section type, lookback window, exclusions, inventory label, item label, and item formatting rules
+- extra item collections, including Gmail labels/query hints, per-collection selection and content caps, exclusions, inventory label, item label, and item formatting rules
 
-The skills should read this config at runtime instead of hardcoding a specific newsletter mix. New formatter output should report extra collection counts through `inventory.extraCounts`, keyed by configured extra collection key. The workflow Gmail account is still runtime environment, supplied through `GOG_ACCOUNT`.
+The skills should read this config at runtime instead of hardcoding a specific newsletter mix. Extra collections can use `excludeSourceKeys` to keep configured primary newsletters out of broader extra collections and avoid duplicate classification. New formatter output should report extra collection counts through `inventory.extraCounts`, keyed by configured extra collection key. The workflow Gmail account is still runtime environment, supplied through `GOG_ACCOUNT`.
 
 Full contract: [docs/contracts/workflow-config-contract.md](docs/contracts/workflow-config-contract.md)
 
