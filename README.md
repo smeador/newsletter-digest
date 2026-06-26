@@ -15,6 +15,19 @@ The goal is not just "summarize some emails." The goal is to produce a repeatabl
 
 The repo also provides parsing and construction logic around the agent workflow. Email extraction is normalized into stable artifacts before summarization, and final delivery is built from structured `digest.json` rather than freeform generated HTML. This makes the workflow more deterministic and substantially reduces token usage by keeping raw Gmail payloads, MIME blobs, repeated newsletter chrome, and renderer details out of the model handoff.
 
+## OpenClaw Runtime
+
+OpenClaw is the intended way to run this workflow end to end. The companion runtime used for this workflow lives at [smeador/claw-gcp-runtime](https://github.com/smeador/claw-gcp-runtime), but the package can work with any OpenClaw runtime after a small amount of setup for skills, config, environment, and scheduled execution.
+
+The repo is organized around that assumption:
+
+- the core skills live in `skills`
+- the OpenClaw runtime surface lives in `openclaw`
+- the runtime-facing manifest stays at `integration.json`
+- runtime expectations are documented in [docs/contracts/openclaw-runtime-expectations.md](docs/contracts/openclaw-runtime-expectations.md)
+
+The repo still keeps the lower-level commands reusable, but the full orchestration model, artifact layout, and runtime assumptions are designed around OpenClaw rather than a generic pluggable runtime layer.
+
 ## What You Get
 
 A successful digest run produces:
@@ -32,7 +45,21 @@ That makes the workflow useful both for direct delivery and for debugging, audit
 
 The main skill is `newsletter-digest`.
 
-At a high level, it:
+The skill is a lightweight OpenClaw entry point. It invokes the stable runner command and reports the result:
+
+```bash
+newsletter-digest-run --mode send
+```
+
+For test mode it invokes:
+
+```bash
+newsletter-digest-run --mode test-send
+```
+
+The skill should not search Gmail, inspect workspace artifacts, hand-edit JSON, or rediscover implementation files. The runner owns the production control loop.
+
+At a high level, the runner:
 
 1. finds the newest relevant newsletter issues in the active time window
 2. extracts each selected message into a stable artifact set
@@ -68,12 +95,64 @@ The Gmail delivery helper skill is `gmail-send`.
 This repo also exposes standalone commands for the main workflow boundaries:
 
 - `newsletter-digest-extract`: extract one Gmail message into cached source artifacts
+- `newsletter-digest-run`: run the bounded production workflow
 - `newsletter-digest-validate`: validate and normalize `digest.json`
 - `newsletter-digest-render`: render `digest.json` into `email.html` and `email.txt`
 - `newsletter-digest-finalize`: validate, render, archive, and send a digest run
 - `newsletter-digest-send`: send pre-rendered HTML and plain-text email bodies
 
 These commands let you use the pieces independently if you want a custom orchestration layer.
+
+### Runner Modes
+
+```bash
+newsletter-digest-run --mode dry-run
+newsletter-digest-run --mode test-send
+newsletter-digest-run --mode send
+```
+
+- `dry-run` performs deterministic candidate search and selection planning, then writes `candidate-summary.json`.
+- `test-send` and `send` continue through extraction, bounded model formatting, validation, rendering, delivery, and `usage-summary.json`.
+
+The runner uses `GOG_ACCOUNT` for Gmail access unless `--account` is provided.
+
+### Bounded Model Backend
+
+The runner isolates model work behind a bounded JSON command interface. It uses deterministic code for retrieval, strict lookback filtering, artifact validation, and send orchestration.
+
+The model backend is only responsible for JSON tasks such as:
+
+- candidate adjudication when deterministic scoring is ambiguous
+- extra item filtering from bounded Gmail label/query results
+- digest formatting from compact `formatter-input.json`
+
+By default the runner expects the bundled OpenClaw adapter command:
+
+```bash
+newsletter-digest-run --mode send
+```
+
+That default command is `newsletter-digest-openclaw-model`. Candidate selection uses:
+
+```bash
+openclaw infer model run --gateway --json
+```
+
+Digest formatting uses an OpenClaw agent file handoff. The adapter gives the agent the formatter input and output paths, and the agent reads `formatter-input.json` from disk and writes the final digest JSON to the requested output path.
+
+You can override it:
+
+```bash
+NEWSLETTER_DIGEST_MODEL_COMMAND="..." newsletter-digest-run --mode send
+```
+
+The command receives:
+
+- `NEWSLETTER_DIGEST_MODEL_TASK`
+- `NEWSLETTER_DIGEST_MODEL_INPUT`
+- `NEWSLETTER_DIGEST_MODEL_OUTPUT`
+
+It must read the input JSON and write valid output JSON. This is the integration point for bounded OpenClaw JSON tasks.
 
 ## Workflow Config
 
@@ -85,9 +164,9 @@ The config controls:
 - primary source keys, titles, senders, query hints, and selection rules
 - link preferences, link cues, and disallowed link categories
 - source-specific formatting rules such as group titles, paragraph counts, bullet sections, and special-case issue formats
-- extra item collections, including section type, lookback window, exclusions, inventory label, item label, and item formatting rules
+- extra item collections, including Gmail labels/query hints, per-collection selection and content caps, exclusions, inventory label, item label, and item formatting rules
 
-The skills should read this config at runtime instead of hardcoding a specific newsletter mix. New formatter output should report extra collection counts through `inventory.extraCounts`, keyed by configured extra collection key. The workflow Gmail account is still runtime environment, supplied through `GOG_ACCOUNT`.
+The skills should read this config at runtime instead of hardcoding a specific newsletter mix. Extra collections can use `excludeSourceKeys` to keep configured primary newsletters out of broader extra collections and avoid duplicate classification. New formatter output should report extra collection counts through `inventory.extraCounts`, keyed by configured extra collection key. The workflow Gmail account is still runtime environment, supplied through `GOG_ACCOUNT`.
 
 Full contract: [docs/contracts/workflow-config-contract.md](docs/contracts/workflow-config-contract.md)
 
@@ -137,16 +216,3 @@ Contract: [docs/contracts/render-send-contract.md](docs/contracts/render-send-co
 - `config`: workflow-specific source and formatting policy
 - `skills`: core skill definitions for digest orchestration, formatting, and delivery
 - `openclaw`: runtime-facing scripts and test harnesses for the intended execution environment
-
-## OpenClaw Runtime
-
-OpenClaw is the intended way to run this workflow end to end.
-
-The repo is organized around that assumption:
-
-- the core skills live in `skills`
-- the OpenClaw runtime surface lives in `openclaw`
-- the runtime-facing manifest stays at `integration.json`
-- runtime expectations are documented in [docs/contracts/openclaw-runtime-expectations.md](docs/contracts/openclaw-runtime-expectations.md)
-
-The repo still keeps the lower-level commands reusable, but the full orchestration model, artifact layout, and runtime assumptions are designed around OpenClaw rather than a generic pluggable runtime layer.

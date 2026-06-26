@@ -43,6 +43,8 @@ Current top-level fields:
 - `delivery`
 - `sourcePolicy`
 
+`lookbackHours` defines a strict message-selection window in hours. The workflow may use broader Gmail query hints to fetch candidate metadata when Gmail search syntax is coarse, but selected primary sources and extra items must have message timestamps inside the configured lookback window.
+
 ## Delivery fields
 
 Current expected fields:
@@ -92,10 +94,23 @@ Each extra collection entry currently includes:
 - `inventoryLabel`
 - `itemName`
 - `lookbackHours`
+- `maxSelectedItems`
+- `maxCleanMarkdownChars`
+- `queryHints`, `searchQueries`, or `gmailLabels`
 - `linkPreference`
 - `itemRules`
 
 `extras` may also include collection-specific exclusion fields such as `excludeSourceKeys`.
+
+When an extra collection has its own `lookbackHours`, that value overrides the top-level window for that collection only. It is still a strict cutoff, not a soft preference.
+
+When an extra collection has `maxSelectedItems`, that value overrides the runner's global extra item cap for that collection only. Omit it to use the runner default.
+
+When an extra collection has `maxCleanMarkdownChars`, that value overrides the runner's global cleaned-content excerpt cap for each selected item in that collection. Use it to keep broad extra collections bounded for the model formatting step.
+
+When an extra collection has `excludeSourceKeys`, the runner excludes both the selected primary message ids for those sources and other candidates that match those primary sources' sender identities. This keeps sources such as AI News, which may also be delivered through Substack, in their configured primary section instead of duplicating them in broad extra collections.
+
+Extra collections should use `queryHints` or `searchQueries` when the exact Gmail search syntax should be controlled by config. When sender addresses vary but Gmail labels are stable, use `gmailLabels`; the runner turns each label into a bounded Gmail query, then still enforces the strict configured cutoff in code.
 
 ## Formatting rules
 
