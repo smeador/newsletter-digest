@@ -1,10 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   buildFinalizeArgs,
   buildExtraQueries,
   buildFormatterInput,
+  callModelBackend,
   candidateMatchesSourceIdentity,
   filterCandidatesByLookback,
   maxCleanMarkdownCharsForSource,
@@ -117,6 +119,138 @@ process.stdout.write(JSON.stringify({ ok: true }));
   assert.match(args[4], new RegExp(outputPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.doesNotMatch(args[4], /already cleaned content/);
   assert.deepEqual(readJson(outputPath), { title: "Digest", sections: [] });
+});
+
+test("OpenClaw adapter supports direct JSON repair task", () => {
+  const tempDir = makeTempDir("newsletter-openclaw-repair");
+  const fakeOpenClaw = join(tempDir, "openclaw");
+  const argsPath = join(tempDir, "args.json");
+  const inputPath = join(tempDir, "repair-input.json");
+  const outputPath = join(tempDir, "repair-output.json");
+
+  writeExecutable(
+    fakeOpenClaw,
+    `#!/usr/bin/env node
+import { writeFileSync } from "node:fs";
+writeFileSync(${JSON.stringify(argsPath)}, JSON.stringify(process.argv.slice(2), null, 2));
+process.stdout.write(JSON.stringify({ outputs: [{ text: JSON.stringify({ title: "Digest", sections: [] }) }] }));
+`,
+  );
+  writeJson(inputPath, {
+    parseError: "Unexpected string",
+    malformedOutput: '{"title":"Digest","sections":[]}',
+    expectedDigest: { title: "Digest" },
+  });
+
+  runNode(
+    [
+      "bin/newsletter-digest-openclaw-model.mjs",
+      "--task",
+      "repair-digest-json",
+      "--input",
+      inputPath,
+      "--output",
+      outputPath,
+      "--transport",
+      "gateway",
+    ],
+    {
+      env: {
+        ...process.env,
+        PATH: `${tempDir}:${process.env.PATH}`,
+      },
+    },
+  );
+
+  const args = readJson(argsPath);
+  assert.deepEqual(args.slice(0, 6), ["infer", "model", "run", "--json", "--gateway", "--thinking"]);
+  assert.match(args.join("\n"), /You repair malformed newsletter digest JSON/);
+  assert.deepEqual(readJson(outputPath), { title: "Digest", sections: [] });
+});
+
+test("runner repairs malformed formatter JSON once and preserves audit artifacts", () => {
+  const tempDir = makeTempDir("newsletter-format-repair");
+  const fakeModel = join(tempDir, "model-command");
+
+  writeExecutable(
+    fakeModel,
+    `#!/usr/bin/env node
+import { writeFileSync } from "node:fs";
+
+if (process.env.NEWSLETTER_DIGEST_MODEL_TASK === "format-digest") {
+  writeFileSync(process.env.NEWSLETTER_DIGEST_MODEL_OUTPUT, String.raw\`{
+  "title": "Digest",
+  "date": "July 5, 2026",
+  "localDate": "2026-07-05",
+  "inventory": {},
+  "sections": [
+    {
+      "groups": [
+        {
+          "content": [
+            "A history of the phrase "make America great again" broke JSON."
+          ]
+        }
+      ]
+    }
+  ]
+}\`);
+  process.exit(0);
+}
+
+if (process.env.NEWSLETTER_DIGEST_MODEL_TASK === "repair-digest-json") {
+  writeFileSync(process.env.NEWSLETTER_DIGEST_MODEL_OUTPUT, JSON.stringify({
+    title: "Digest",
+    date: "July 5, 2026",
+    localDate: "2026-07-05",
+    inventory: {},
+    sections: [
+      {
+        groups: [
+          {
+            content: [
+              "A history of the phrase \\"make America great again\\" broke JSON."
+            ]
+          }
+        ]
+      }
+    ]
+  }));
+  process.exit(0);
+}
+
+throw new Error("unexpected task " + process.env.NEWSLETTER_DIGEST_MODEL_TASK);
+`,
+  );
+
+  const input = {
+    title: "Digest",
+    date: "July 5, 2026",
+    localDate: "2026-07-05",
+    inventory: {},
+    selectedSources: [],
+  };
+  const digest = callModelBackend(
+    "format-digest",
+    input,
+    {
+      modelBackend: "command",
+      modelCommand: fakeModel,
+    },
+    tempDir,
+  );
+
+  assert.equal(
+    digest.sections[0].groups[0].content[0],
+    'A history of the phrase "make America great again" broke JSON.',
+  );
+  assert.equal(existsSync(join(tempDir, "format-digest-parse-error.json")), true);
+  assert.equal(existsSync(join(tempDir, "format-digest-malformed-output.json")), true);
+  assert.equal(existsSync(join(tempDir, "format-digest-repair-summary.json")), true);
+  assert.match(
+    readFileSync(join(tempDir, "format-digest-malformed-output.json"), "utf8"),
+    /phrase "make America great again" broke JSON/,
+  );
 });
 
 test("runner args default to dry-run and reject unknown modes", () => {
