@@ -13,6 +13,7 @@ import {
   maxSelectedForExtra,
   parseArgs,
   parseMessageDate,
+  runNewsletterDigest,
   scoreCandidate,
   selectExtraCandidatesFromCandidates,
   selectDeterministicCandidate,
@@ -257,6 +258,47 @@ test("runner args default to dry-run and reject unknown modes", () => {
   assert.equal(parseArgs([]).mode, "dry-run");
   assert.equal(parseArgs(["--mode", "send", "--account", "digest@example.com"]).mode, "send");
   assert.throws(() => parseArgs(["--mode", "wander"]), /Invalid --mode/);
+});
+
+test("runner refuses to send an empty digest", async () => {
+  const tempDir = makeTempDir("newsletter-empty-send");
+  const configPath = join(tempDir, "newsletter-digest.json");
+  const outputPath = join(tempDir, "summary.json");
+
+  writeJson(configPath, {
+    title: "Newsletter Digest",
+    timezone: "UTC",
+    lookbackHours: 36,
+    delivery: {
+      defaultRecipient: "recipient@example.com",
+    },
+    sourcePolicy: {
+      primary: [],
+      extras: [],
+    },
+  });
+
+  await assert.rejects(
+    () =>
+      runNewsletterDigest({
+        mode: "send",
+        config: configPath,
+        memoryRoot: tempDir,
+        account: "workflow@example.com",
+        recipient: "recipient@example.com",
+        modelBackend: "fixture",
+        allowFixtureSend: true,
+        outputJson: outputPath,
+      }),
+    /Refusing to send empty newsletter digest/,
+  );
+
+  const summary = readJson(outputPath);
+  assert.equal(summary.status, "error");
+  assert.equal(summary.reason, "no selected newsletter messages");
+  assert.deepEqual(summary.selectedMessageIds, []);
+  assert.deepEqual(readJson(summary.candidateSummary).selectedMessageIds, []);
+  assert.deepEqual(readJson(join(summary.runDir, "usage-summary.json")), summary);
 });
 
 test("strict lookback filtering rejects older candidate dates", () => {
