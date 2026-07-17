@@ -17,6 +17,7 @@ import {
   scoreCandidate,
   selectExtraCandidatesFromCandidates,
   selectDeterministicCandidate,
+  validateWorkflowConfig,
 } from "../lib/run/newsletter-digest-run.mjs";
 import { internals as openclawModelInternals } from "../lib/run/openclaw-model-command.mjs";
 import { makeTempDir, readJson, runNode, writeExecutable, writeJson } from "./helpers.mjs";
@@ -454,6 +455,30 @@ test("extra collection labels become bounded Gmail queries", () => {
   assert.deepEqual(buildExtraQueries({ queryHints: ["label:custom newer_than:2d"] }, 36), [
     "label:custom newer_than:2d",
   ]);
+});
+
+test("workflow config rejects extra collections that cannot search Gmail", () => {
+  assert.throws(
+    () =>
+      validateWorkflowConfig({
+        lookbackHours: 36,
+        sourcePolicy: {
+          extras: [{ key: "substack-review", lookbackHours: 36 }],
+        },
+      }),
+    /substack-review must define gmailLabels or queryHints/,
+  );
+
+  assert.doesNotThrow(() =>
+    validateWorkflowConfig({
+      sourcePolicy: {
+        extras: [
+          { key: "substack-review", gmailLabels: ["substack"] },
+          { key: "stanford", queryHints: ["label:stanford newer_than:3d"] },
+        ],
+      },
+    }),
+  );
 });
 
 test("extra candidate selection enforces lookback, cap, and primary exclusions", () => {
