@@ -17,10 +17,90 @@ import {
   scoreCandidate,
   selectExtraCandidatesFromCandidates,
   selectDeterministicCandidate,
+  validateFormattedDigest,
+  validateOrRepairFormattedDigest,
   validateWorkflowConfig,
 } from "../lib/run/newsletter-digest-run.mjs";
 import { internals as openclawModelInternals } from "../lib/run/openclaw-model-command.mjs";
 import { makeTempDir, readJson, runNode, writeExecutable, writeJson } from "./helpers.mjs";
+
+function formatterContractFixture() {
+  return {
+    title: "Newsletter Digest",
+    date: "July 19, 2026",
+    localDate: "2026-07-19",
+    inventory: {
+      foundPrimary: ["Technology Brief"],
+      missingPrimary: [],
+      extraCounts: {
+        research: { title: "Research Desk", count: 2, itemName: "items" },
+        stanford: { title: "Stanford", count: 0, itemName: "items" },
+      },
+    },
+    selectedSources: [
+      {
+        type: "primary",
+        key: "technology",
+        title: "Technology Brief",
+        links: [{ url: "https://example.com/technology" }],
+      },
+      {
+        type: "extra",
+        key: "research",
+        collectionKey: "research",
+        sectionType: "research_digest",
+        title: "Research Desk",
+        links: [{ url: "https://example.com/research-1" }],
+      },
+      {
+        type: "extra",
+        key: "research",
+        collectionKey: "research",
+        sectionType: "research_digest",
+        title: "Research Desk",
+        links: [{ url: "https://example.com/research-2" }],
+      },
+    ],
+  };
+}
+
+function validFormattedDigestFixture() {
+  const input = formatterContractFixture();
+  return {
+    title: input.title,
+    date: input.date,
+    localDate: input.localDate,
+    inventory: input.inventory,
+    sections: [
+      {
+        type: "primary",
+        key: "technology",
+        title: "Technology Brief",
+        issueDate: input.date,
+        sender: "Technology Desk",
+        issueLink: "https://example.com/technology",
+        groups: [{ title: "Main article", kind: "paragraphs", content: "A complete summary." }],
+      },
+      {
+        type: "research_digest",
+        key: "research",
+        title: "Research Desk",
+        items: [
+          {
+            title: "Research one",
+            summary: "The first research summary.",
+            link: "https://example.com/research-1",
+          },
+          {
+            title: "Research two",
+            summary: "The second research summary.",
+            link: "https://example.com/research-2",
+          },
+        ],
+      },
+    ],
+  };
+}
 
 test("runner CLI exposes the stable command surface", () => {
   const output = runNode(["bin/newsletter-digest-run.mjs", "--help"]);
@@ -69,7 +149,54 @@ process.stdout.write(JSON.stringify({ outputs: [{ text: JSON.stringify({ ok: tru
   assert.deepEqual(readJson(argsPath).slice(0, 6), ["infer", "model", "run", "--json", "--gateway", "--thinking"]);
 });
 
-test("OpenClaw adapter uses agent file handoff for digest formatting", () => {
+test("OpenClaw adapter formats digests in one bounded model call by default", () => {
+  const tempDir = makeTempDir("newsletter-openclaw-format-direct");
+  const fakeOpenClaw = join(tempDir, "openclaw");
+  const argsPath = join(tempDir, "args.json");
+  const inputPath = join(tempDir, "formatter-input.json");
+  const outputPath = join(tempDir, "format-digest-output.json");
+
+  writeExecutable(
+    fakeOpenClaw,
+    `#!/usr/bin/env node
+import { writeFileSync } from "node:fs";
+writeFileSync(${JSON.stringify(argsPath)}, JSON.stringify(process.argv.slice(2), null, 2));
+process.stdout.write(JSON.stringify({ outputs: [{ text: JSON.stringify({ title: "Digest", sections: [] }) }] }));
+`,
+  );
+  writeJson(inputPath, {
+    title: "Digest",
+    selectedSources: [{ key: "source", content: "already cleaned content" }],
+  });
+
+  runNode(
+    [
+      "bin/newsletter-digest-openclaw-model.mjs",
+      "--task",
+      "format-digest",
+      "--input",
+      inputPath,
+      "--output",
+      outputPath,
+      "--transport",
+      "gateway",
+    ],
+    {
+      env: {
+        ...process.env,
+        PATH: `${tempDir}:${process.env.PATH}`,
+      },
+    },
+  );
+
+  const args = readJson(argsPath);
+  assert.deepEqual(args.slice(0, 6), ["infer", "model", "run", "--json", "--gateway", "--thinking"]);
+  assert.match(args.join("\n"), /already cleaned content/);
+  assert.match(args.join("\n"), /Every extra item must include non-empty title and summary strings/);
+  assert.deepEqual(readJson(outputPath), { title: "Digest", sections: [] });
+});
+
+test("OpenClaw adapter retains legacy agent file handoff for digest formatting", () => {
   const tempDir = makeTempDir("newsletter-openclaw-format");
   const fakeOpenClaw = join(tempDir, "openclaw");
   const argsPath = join(tempDir, "args.json");
@@ -101,6 +228,8 @@ process.stdout.write(JSON.stringify({ ok: true }));
       outputPath,
       "--transport",
       "gateway",
+      "--format-mode",
+      "agent",
       "--agent",
       "main",
     ],
@@ -253,6 +382,87 @@ throw new Error("unexpected task " + process.env.NEWSLETTER_DIGEST_MODEL_TASK);
     readFileSync(join(tempDir, "format-digest-malformed-output.json"), "utf8"),
     /phrase "make America great again" broke JSON/,
   );
+});
+
+test("formatted digest validation enforces exact inventory, sections, items, and supplied links", () => {
+  const input = formatterContractFixture();
+  const validDigest = validFormattedDigestFixture();
+
+  assert.deepEqual(validateFormattedDigest(validDigest, input), {
+    expectedSectionKeys: ["technology", "research"],
+    extraItemCounts: { research: 2 },
+  });
+
+  const missingExtra = structuredClone(validDigest);
+  missingExtra.sections.pop();
+  assert.throws(
+    () => validateFormattedDigest(missingExtra, input),
+    /section keys and order.*technology.*research/,
+  );
+
+  const incompleteInventory = structuredClone(validDigest);
+  delete incompleteInventory.inventory.extraCounts.stanford;
+  assert.throws(
+    () => validateFormattedDigest(incompleteInventory, input),
+    /inventory must exactly match formatter input/,
+  );
+
+  const missingItem = structuredClone(validDigest);
+  missingItem.sections[1].items.pop();
+  assert.throws(
+    () => validateFormattedDigest(missingItem, input),
+    /items must contain exactly 2 items/,
+  );
+
+  const malformedItem = structuredClone(validDigest);
+  delete malformedItem.sections[1].items[0].title;
+  malformedItem.sections[1].items[1].link = "https://invented.example.com";
+  assert.throws(
+    () => validateFormattedDigest(malformedItem, input),
+    /title must be a non-empty string[\s\S]*link must be a supplied link/,
+  );
+
+  const emptyGroup = structuredClone(validDigest);
+  emptyGroup.sections[0].groups[0].content = "";
+  assert.throws(
+    () => validateFormattedDigest(emptyGroup, input),
+    /content must be a non-empty string for paragraphs/,
+  );
+});
+
+test("formatted digest contract repair runs once and records audit artifacts", () => {
+  const tempDir = makeTempDir("newsletter-contract-repair");
+  const fakeModel = join(tempDir, "model-command");
+  const input = formatterContractFixture();
+  const invalidDigest = validFormattedDigestFixture();
+  delete invalidDigest.sections[1].items[0].title;
+
+  writeExecutable(
+    fakeModel,
+    `#!/usr/bin/env node
+import { readFileSync, writeFileSync } from "node:fs";
+if (process.env.NEWSLETTER_DIGEST_MODEL_TASK !== "repair-digest-contract") {
+  throw new Error("unexpected task " + process.env.NEWSLETTER_DIGEST_MODEL_TASK);
+}
+const repairInput = JSON.parse(readFileSync(process.env.NEWSLETTER_DIGEST_MODEL_INPUT, "utf8"));
+repairInput.existingDigest.sections[1].items[0].title = "Research one";
+writeFileSync(process.env.NEWSLETTER_DIGEST_MODEL_OUTPUT, JSON.stringify(repairInput.existingDigest));
+`,
+  );
+
+  const repaired = validateOrRepairFormattedDigest(
+    invalidDigest,
+    input,
+    { modelBackend: "command", modelCommand: fakeModel },
+    tempDir,
+  );
+
+  assert.equal(repaired.sections[1].items[0].title, "Research one");
+  assert.equal(readJson(join(tempDir, "format-digest-contract-summary.json")).repaired, true);
+  assert.equal(existsSync(join(tempDir, "format-digest-contract-invalid.json")), true);
+  assert.equal(existsSync(join(tempDir, "format-digest-contract-error.json")), true);
+  assert.equal(existsSync(join(tempDir, "repair-digest-contract-input.json")), true);
+  assert.equal(existsSync(join(tempDir, "repair-digest-contract-output.json")), true);
 });
 
 test("runner args default to dry-run and reject unknown modes", () => {
