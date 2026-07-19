@@ -57,6 +57,8 @@ For test mode it invokes:
 newsletter-digest-run --mode test-send
 ```
 
+The packaged OpenClaw E2E test creates a temporary isolated cron job and waits for that run to finish. It reports success only after a new `test-send` usage summary, a valid strict-contract artifact, and a Gmail send result containing a message ID all exist; an enqueue acknowledgment alone is not a passing test.
+
 The skill should not search Gmail, inspect workspace artifacts, hand-edit JSON, or rediscover implementation files. The runner owns the production control loop.
 
 At a high level, the runner:

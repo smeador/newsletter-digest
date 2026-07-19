@@ -141,6 +141,8 @@ The OpenClaw runtime layer owns:
 - providing generic skill dispatch such as `agent-runtime test skill <skill>`
 - runtime-specific test entrypoints such as `openclaw/tests/<skill>/TEST.sh`
 
+The newsletter skill test must use OpenClaw's cron `--wait` mode and then verify durable workflow artifacts. A passing test requires a new successful `test-send` usage summary, `format-digest-contract-summary.json` with `status: valid`, and a send-result artifact with a non-empty Gmail message ID. A successful enqueue response is not sufficient.
+
 ## Failure model
 
 If a runtime expectation is not satisfied, the workflow should fail clearly.

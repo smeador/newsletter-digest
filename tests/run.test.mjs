@@ -22,7 +22,7 @@ import {
   validateWorkflowConfig,
 } from "../lib/run/newsletter-digest-run.mjs";
 import { internals as openclawModelInternals } from "../lib/run/openclaw-model-command.mjs";
-import { makeTempDir, readJson, runNode, writeExecutable, writeJson } from "./helpers.mjs";
+import { ensureDir, makeTempDir, readJson, runBash, runNode, writeExecutable, writeJson } from "./helpers.mjs";
 
 function formatterContractFixture() {
   return {
@@ -428,6 +428,20 @@ test("formatted digest validation enforces exact inventory, sections, items, and
     () => validateFormattedDigest(emptyGroup, input),
     /content must be a non-empty string for paragraphs/,
   );
+
+  const primaryWithoutSuppliedLinks = structuredClone(input);
+  primaryWithoutSuppliedLinks.selectedSources[0].links = [];
+  assert.throws(
+    () => validateFormattedDigest(validDigest, primaryWithoutSuppliedLinks),
+    /issueLink cannot be verified because the source has no supplied links/,
+  );
+
+  const extraWithoutSuppliedLinks = structuredClone(input);
+  extraWithoutSuppliedLinks.selectedSources[1].links = [];
+  assert.throws(
+    () => validateFormattedDigest(validDigest, extraWithoutSuppliedLinks),
+    /link must be empty when the source has no supplied links/,
+  );
 });
 
 test("formatted digest contract repair runs once and records audit artifacts", () => {
@@ -691,6 +705,30 @@ test("workflow config rejects extra collections that cannot search Gmail", () =>
   );
 });
 
+test("workflow config rejects duplicate keys and unsearchable primary sources", () => {
+  assert.throws(
+    () =>
+      validateWorkflowConfig({
+        sourcePolicy: {
+          primary: [{ key: "daily", title: "Daily", queryHints: ["from:daily@example.com"] }],
+          extras: [{ key: "daily", gmailLabels: ["daily"] }],
+        },
+      }),
+    /Duplicate source or collection key: daily/,
+  );
+
+  assert.throws(
+    () =>
+      validateWorkflowConfig({
+        sourcePolicy: {
+          primary: [{ key: "daily", title: "Daily", senders: ["daily@example.com"] }],
+          extras: [],
+        },
+      }),
+    /Primary source daily must define at least one queryHint/,
+  );
+});
+
 test("extra candidate selection enforces lookback, cap, and primary exclusions", () => {
   const cutoff = new Date("2026-06-16T12:00:00.000Z");
   const result = selectExtraCandidatesFromCandidates(
@@ -792,6 +830,7 @@ test("finalize args match the finalizer command contract", () => {
     account: "sender@example.com",
     recipient: "recipient@example.com",
     subject: "Digest",
+    timezone: "America/Chicago",
     messageIdsJson: "/tmp/message-ids.json",
     sourceArtifactsJson: "/tmp/source-artifacts.json",
   });
@@ -809,12 +848,107 @@ test("finalize args match the finalizer command contract", () => {
     "Digest",
     "--from",
     "sender@example.com",
+    "--timezone",
+    "America/Chicago",
     "--message-ids-json",
     "/tmp/message-ids.json",
     "--source-artifacts-json",
     "/tmp/source-artifacts.json",
   ]);
-  assert.equal(args.includes("--timezone"), false);
+  assert.equal(args.includes("--timezone"), true);
+});
+
+test("OpenClaw E2E wrapper waits and verifies contract plus Gmail artifacts", () => {
+  const tempDir = makeTempDir("newsletter-openclaw-e2e");
+  const memoryRoot = join(tempDir, "memory");
+  const fakeOpenClaw = join(tempDir, "openclaw");
+  const callsPath = join(tempDir, "calls.jsonl");
+  ensureDir(memoryRoot);
+
+  writeExecutable(
+    fakeOpenClaw,
+    `#!/usr/bin/env node
+import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+const args = process.argv.slice(2);
+appendFileSync(process.env.FAKE_OPENCLAW_CALLS, JSON.stringify(args) + "\\n");
+if (args[0] !== "cron") process.exit(2);
+if (args[1] === "add") {
+  process.stdout.write(JSON.stringify({ id: "test-job-1" }));
+} else if (args[1] === "run") {
+  const runDir = join(process.env.NEWSLETTER_DIGEST_MEMORY_ROOT, "digests", "2026-07-19", "run-1");
+  const sendResult = join(runDir, "send", "send-result.json");
+  mkdirSync(dirname(sendResult), { recursive: true });
+  writeFileSync(join(runDir, "format-digest-contract-summary.json"), JSON.stringify({ status: "valid" }));
+  writeFileSync(sendResult, JSON.stringify({ messageId: "gmail-message-1" }));
+  writeFileSync(join(runDir, "usage-summary.json"), JSON.stringify({
+    status: "ok",
+    mode: "test-send",
+    sendResultJson: sendResult,
+  }));
+  process.stdout.write(JSON.stringify({ ok: true, finished: true }));
+} else if (args[1] === "rm") {
+  process.stdout.write(JSON.stringify({ ok: true }));
+} else {
+  process.exit(2);
+}
+`,
+  );
+
+  const result = runBash("openclaw/tests/newsletter-digest/TEST.sh", [], {
+    env: {
+      ...process.env,
+      PATH: `${tempDir}:${process.env.PATH}`,
+      FAKE_OPENCLAW_CALLS: callsPath,
+      NEWSLETTER_DIGEST_MEMORY_ROOT: memoryRoot,
+      NEWSLETTER_DIGEST_TIMEZONE: "UTC",
+      SKILL_TEST_TIMEOUT_MS: "120000",
+    },
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /gmail-message-1/);
+  const calls = readFileSync(callsPath, "utf8").trim().split("\n").map(JSON.parse);
+  const runCall = calls.find((args) => args[1] === "run");
+  assert.ok(runCall);
+  assert.equal(runCall.includes("--wait"), true);
+  assert.deepEqual(runCall.slice(runCall.indexOf("--wait-timeout"), runCall.indexOf("--wait-timeout") + 2), [
+    "--wait-timeout",
+    "120000ms",
+  ]);
+  assert.equal(calls.some((args) => args[1] === "rm" && args[2] === "test-job-1"), true);
+});
+
+test("OpenClaw E2E wrapper rejects an enqueued run without digest proof", () => {
+  const tempDir = makeTempDir("newsletter-openclaw-e2e-no-artifacts");
+  const memoryRoot = join(tempDir, "memory");
+  const fakeOpenClaw = join(tempDir, "openclaw");
+  ensureDir(memoryRoot);
+
+  writeExecutable(
+    fakeOpenClaw,
+    `#!/usr/bin/env node
+const args = process.argv.slice(2);
+if (args[0] !== "cron") process.exit(2);
+if (args[1] === "add") process.stdout.write(JSON.stringify({ id: "test-job-2" }));
+else if (args[1] === "run") process.stdout.write(JSON.stringify({ ok: true, enqueued: true }));
+else if (args[1] === "rm") process.stdout.write(JSON.stringify({ ok: true }));
+else process.exit(2);
+`,
+  );
+
+  const result = runBash("openclaw/tests/newsletter-digest/TEST.sh", [], {
+    env: {
+      ...process.env,
+      PATH: `${tempDir}:${process.env.PATH}`,
+      NEWSLETTER_DIGEST_MEMORY_ROOT: memoryRoot,
+      NEWSLETTER_DIGEST_TIMEZONE: "UTC",
+      SKILL_TEST_TIMEOUT_MS: "120000",
+    },
+  });
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /without a new successful test-send usage summary/);
 });
 
 test("date parser handles Gmail millisecond timestamps", () => {
