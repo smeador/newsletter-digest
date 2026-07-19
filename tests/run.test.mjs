@@ -190,7 +190,7 @@ process.stdout.write(JSON.stringify({ outputs: [{ text: JSON.stringify({ title: 
   );
 
   const args = readJson(argsPath);
-  assert.deepEqual(args.slice(0, 6), ["infer", "model", "run", "--json", "--gateway", "--thinking"]);
+  assert.deepEqual(args.slice(0, 6), ["infer", "model", "run", "--json", "--local", "--thinking"]);
   assert.match(args.join("\n"), /already cleaned content/);
   assert.match(args.join("\n"), /Every extra item must include non-empty title and summary strings/);
   assert.deepEqual(readJson(outputPath), { title: "Digest", sections: [] });

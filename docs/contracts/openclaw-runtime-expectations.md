@@ -77,7 +77,7 @@ Required package commands for a full production run:
 
 ### Bounded model command
 
-The production runner may call back into OpenClaw for bounded JSON tasks. By default it uses `newsletter-digest-openclaw-model`. Candidate selection and digest formatting call `openclaw infer model run --gateway --json`. Formatting is a single bounded call so the selected newsletter payload is billed once instead of being replayed through several agent tool turns. The legacy `openclaw agent` file handoff remains available through `NEWSLETTER_DIGEST_FORMAT_MODE=agent`. The runtime may override the adapter through `NEWSLETTER_DIGEST_MODEL_COMMAND` or `newsletter-digest-run --model-command`.
+The production runner may call back into OpenClaw for bounded JSON tasks. By default it uses `newsletter-digest-openclaw-model`. Candidate selection calls `openclaw infer model run --gateway --json`; digest formatting uses local transport to avoid the gateway's fixed request deadline for slower models. Formatting is a single bounded call so the selected newsletter payload is billed once instead of being replayed through several agent tool turns. Gateway formatting remains available through `NEWSLETTER_DIGEST_FORMAT_TRANSPORT=gateway`, and the legacy `openclaw agent` file handoff through `NEWSLETTER_DIGEST_FORMAT_MODE=agent`. The runtime may override the adapter through `NEWSLETTER_DIGEST_MODEL_COMMAND` or `newsletter-digest-run --model-command`.
 
 The command receives:
 

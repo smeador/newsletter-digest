@@ -138,7 +138,7 @@ That default command is `newsletter-digest-openclaw-model`. Candidate selection 
 openclaw infer model run --gateway --json
 ```
 
-Digest formatting uses one bounded `openclaw infer model run` call with the formatter skill and compact `formatter-input.json` embedded in the prompt. This avoids repeatedly billing the same newsletter payload across agent tool turns. Set `NEWSLETTER_DIGEST_FORMAT_MODE=agent` only when the legacy file-handoff path is needed for rollback.
+Digest formatting uses one bounded local-transport `openclaw infer model run` call with the formatter skill and compact `formatter-input.json` embedded in the prompt. This avoids repeatedly billing the same newsletter payload across agent tool turns and avoids the gateway transport's fixed request deadline for slower models. Set `NEWSLETTER_DIGEST_FORMAT_TRANSPORT=gateway` to opt back into gateway transport, or `NEWSLETTER_DIGEST_FORMAT_MODE=agent` only when the legacy file-handoff path is needed for rollback.
 
 Before rendering or sending, the runner validates the formatted digest against the exact formatter input. Inventory, section order, selected-source coverage, extra item counts, required fields, content shapes, and supplied links must match. One bounded contract-repair call is allowed; a second validation failure stops the send.
 
