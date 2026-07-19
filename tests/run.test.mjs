@@ -11,6 +11,7 @@ import {
   filterCandidatesByLookback,
   maxCleanMarkdownCharsForSource,
   maxSelectedForExtra,
+  normalizeFormattedDigestStructure,
   parseArgs,
   parseMessageDate,
   runNewsletterDigest,
@@ -472,11 +473,67 @@ writeFileSync(process.env.NEWSLETTER_DIGEST_MODEL_OUTPUT, JSON.stringify(repairI
   );
 
   assert.equal(repaired.sections[1].items[0].title, "Research one");
-  assert.equal(readJson(join(tempDir, "format-digest-contract-summary.json")).repaired, true);
+  assert.equal(readJson(join(tempDir, "format-digest-contract-summary.json")).repairMode, "model");
   assert.equal(existsSync(join(tempDir, "format-digest-contract-invalid.json")), true);
   assert.equal(existsSync(join(tempDir, "format-digest-contract-error.json")), true);
   assert.equal(existsSync(join(tempDir, "repair-digest-contract-input.json")), true);
   assert.equal(existsSync(join(tempDir, "repair-digest-contract-output.json")), true);
+});
+
+test("formatted digest repairs exact metadata deterministically before using a model", () => {
+  const tempDir = makeTempDir("newsletter-contract-normalize");
+  const input = formatterContractFixture();
+  const invalidDigest = validFormattedDigestFixture();
+  invalidDigest.inventory = { foundPrimary: [], missingPrimary: [], extraCounts: {} };
+  invalidDigest.sections[0].issueLink = "https://invented.example.com/technology";
+  invalidDigest.sections[1].type = "wrong_type";
+  invalidDigest.sections[1].items[0].link = "https://invented.example.com/research";
+
+  const normalized = normalizeFormattedDigestStructure(invalidDigest, input);
+  assert.equal(normalized.sections[0].issueLink, "https://example.com/technology");
+  assert.equal(normalized.sections[1].type, "research_digest");
+  assert.equal(normalized.sections[1].items[0].link, "https://example.com/research-1");
+
+  const repaired = validateOrRepairFormattedDigest(
+    invalidDigest,
+    input,
+    { modelBackend: "fixture" },
+    tempDir,
+  );
+  assert.deepEqual(repaired, normalized);
+  assert.equal(readJson(join(tempDir, "format-digest-contract-summary.json")).repairMode, "deterministic");
+  assert.equal(existsSync(join(tempDir, "repair-digest-contract-input.json")), false);
+});
+
+test("formatted digest records a second validation failure and stops", () => {
+  const tempDir = makeTempDir("newsletter-contract-repair-failure");
+  const fakeModel = join(tempDir, "model-command");
+  const input = formatterContractFixture();
+  const invalidDigest = validFormattedDigestFixture();
+  delete invalidDigest.sections[1].items[0].title;
+
+  writeExecutable(
+    fakeModel,
+    `#!/usr/bin/env node
+import { readFileSync, writeFileSync } from "node:fs";
+const repairInput = JSON.parse(readFileSync(process.env.NEWSLETTER_DIGEST_MODEL_INPUT, "utf8"));
+writeFileSync(process.env.NEWSLETTER_DIGEST_MODEL_OUTPUT, JSON.stringify(repairInput.existingDigest));
+`,
+  );
+
+  assert.throws(
+    () =>
+      validateOrRepairFormattedDigest(
+        invalidDigest,
+        input,
+        { modelBackend: "command", modelCommand: fakeModel },
+        tempDir,
+      ),
+    /title must be a non-empty string/,
+  );
+  const failure = readJson(join(tempDir, "format-digest-contract-repair-error.json"));
+  assert.equal(failure.status, "invalid");
+  assert.match(failure.violations.join("\n"), /title must be a non-empty string/);
 });
 
 test("runner args default to dry-run and reject unknown modes", () => {
