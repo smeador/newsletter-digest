@@ -57,6 +57,8 @@ For test mode it invokes:
 newsletter-digest-run --mode test-send
 ```
 
+The packaged OpenClaw E2E test creates a temporary isolated cron job and waits for that run to finish. It reports success only after a new `test-send` usage summary, a valid strict-contract artifact, and a Gmail send result containing a message ID all exist; an enqueue acknowledgment alone is not a passing test.
+
 The skill should not search Gmail, inspect workspace artifacts, hand-edit JSON, or rediscover implementation files. The runner owns the production control loop.
 
 At a high level, the runner:
@@ -138,7 +140,9 @@ That default command is `newsletter-digest-openclaw-model`. Candidate selection 
 openclaw infer model run --gateway --json
 ```
 
-Digest formatting uses an OpenClaw agent file handoff. The adapter gives the agent the formatter input and output paths, and the agent reads `formatter-input.json` from disk and writes the final digest JSON to the requested output path.
+Digest formatting uses one bounded local-transport `openclaw infer model run` call with the formatter skill and compact `formatter-input.json` embedded in the prompt. This avoids repeatedly billing the same newsletter payload across agent tool turns and avoids the gateway transport's fixed request deadline for slower models. Set `NEWSLETTER_DIGEST_FORMAT_TRANSPORT=gateway` to opt back into gateway transport, or `NEWSLETTER_DIGEST_FORMAT_MODE=agent` only when the legacy file-handoff path is needed for rollback.
+
+Before rendering or sending, the runner validates the formatted digest against the exact formatter input. Inventory, section order, selected-source coverage, extra item counts, required fields, content shapes, and supplied links must match. Exact metadata and links are normalized deterministically first; one bounded model repair is allowed only for remaining content defects, and a second validation failure stops the send with an audit artifact.
 
 You can override it:
 

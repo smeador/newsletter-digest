@@ -77,7 +77,7 @@ Required package commands for a full production run:
 
 ### Bounded model command
 
-The production runner may call back into OpenClaw for bounded JSON tasks. By default it uses `newsletter-digest-openclaw-model`. Candidate selection tasks call `openclaw infer model run --gateway --json`; digest formatting calls `openclaw agent` with input and output file paths so the agent can read `formatter-input.json` from disk instead of receiving the whole formatter payload as a command-line argument. The runtime may override this through `NEWSLETTER_DIGEST_MODEL_COMMAND` or `newsletter-digest-run --model-command`.
+The production runner may call back into OpenClaw for bounded JSON tasks. By default it uses `newsletter-digest-openclaw-model`. Candidate selection calls `openclaw infer model run --gateway --json`; digest formatting uses local transport to avoid the gateway's fixed request deadline for slower models. Formatting is a single bounded call so the selected newsletter payload is billed once instead of being replayed through several agent tool turns. Gateway formatting remains available through `NEWSLETTER_DIGEST_FORMAT_TRANSPORT=gateway`, and the legacy `openclaw agent` file handoff through `NEWSLETTER_DIGEST_FORMAT_MODE=agent`. The runtime may override the adapter through `NEWSLETTER_DIGEST_MODEL_COMMAND` or `newsletter-digest-run --model-command`.
 
 The command receives:
 
@@ -140,6 +140,8 @@ The OpenClaw runtime layer owns:
 - exposing helper binaries
 - providing generic skill dispatch such as `agent-runtime test skill <skill>`
 - runtime-specific test entrypoints such as `openclaw/tests/<skill>/TEST.sh`
+
+The newsletter skill test must use OpenClaw's cron `--wait` mode and then verify durable workflow artifacts. A passing test requires a new successful `test-send` usage summary, `format-digest-contract-summary.json` with `status: valid`, and a send-result artifact with a non-empty Gmail message ID. A successful enqueue response is not sufficient.
 
 ## Failure model
 
