@@ -1,3 +1,16 @@
+---
+name: newsletter-digest
+description: "Run the bounded newsletter digest workflow through the installed deterministic runner."
+user-invocable: true
+metadata:
+  {
+    "openclaw":
+      {
+        "requires": { "bins": ["newsletter-digest-run"] },
+      },
+  }
+---
+
 # newsletter-digest
 
 Use this skill to run the newsletter digest workflow through the stable runner command.

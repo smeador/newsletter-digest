@@ -1,3 +1,16 @@
+---
+name: gmail-send
+description: "Send validated newsletter digest artifacts through the configured gog Gmail account."
+user-invocable: false
+metadata:
+  {
+    "openclaw":
+      {
+        "requires": { "bins": ["gog", "newsletter-digest-finalize"] },
+      },
+  }
+---
+
 # gmail-send
 
 Use this skill when the newsletter workflow needs to send an email through `gog`.

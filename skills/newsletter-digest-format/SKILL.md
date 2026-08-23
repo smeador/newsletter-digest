@@ -1,3 +1,16 @@
+---
+name: newsletter-digest-format
+description: "Format already-selected, cleaned newsletter material into contract-valid digest JSON."
+user-invocable: false
+metadata:
+  {
+    "openclaw":
+      {
+        "requires": { "bins": ["newsletter-digest-openclaw-model"] },
+      },
+  }
+---
+
 # newsletter-digest-format
 
 Use this skill to turn the already-selected newsletter source material into the final newsletter digest.

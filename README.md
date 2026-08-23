@@ -142,6 +142,8 @@ openclaw infer model run --gateway --json
 
 Digest formatting uses one bounded local-transport `openclaw infer model run` call with the formatter skill and compact `formatter-input.json` embedded in the prompt. This avoids repeatedly billing the same newsletter payload across agent tool turns and avoids the gateway transport's fixed request deadline for slower models. Set `NEWSLETTER_DIGEST_FORMAT_TRANSPORT=gateway` to opt back into gateway transport, or `NEWSLETTER_DIGEST_FORMAT_MODE=agent` only when the legacy file-handoff path is needed for rollback.
 
+Each bounded call appends safe operational metadata to `model-calls.json` in the run directory: task, provider/model, transport, prompt and output byte counts, latency, status, and normalized token/cost fields when OpenClaw exposes them. The final `usage-summary.json` links to this artifact through `modelCallsJson`.
+
 Before rendering or sending, the runner validates the formatted digest against the exact formatter input. Inventory, section order, selected-source coverage, extra item counts, required fields, content shapes, and supplied links must match. Exact metadata and links are normalized deterministically first; one bounded model repair is allowed only for remaining content defects, and a second validation failure stops the send with an audit artifact.
 
 You can override it:
@@ -220,3 +222,5 @@ Contract: [docs/contracts/render-send-contract.md](docs/contracts/render-send-co
 - `config`: workflow-specific source and formatting policy
 - `skills`: core skill definitions for digest orchestration, formatting, and delivery
 - `openclaw`: runtime-facing scripts and test harnesses for the intended execution environment
+
+Each packaged `SKILL.md` includes OpenClaw frontmatter so the runtime can register it. Scheduled runs should invoke the main skill explicitly with `/skill:newsletter-digest Run newsletter-digest now.` rather than relying on natural-language skill discovery.
