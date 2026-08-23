@@ -87,6 +87,8 @@ The command receives:
 
 It must read the input JSON and write valid output JSON. It should not perform Gmail retrieval, filesystem discovery beyond the provided paths, rendering, or sending.
 
+The default adapter appends a `model-calls.json` audit artifact in the run directory. It records bounded operational metadata for each model call without retaining an additional copy of the prompt or response. `usage-summary.json` exposes its path as `modelCallsJson`.
+
 ## Runtime-specific path expectations
 
 ### Docker-local / cloud
@@ -141,7 +143,7 @@ The OpenClaw runtime layer owns:
 - providing generic skill dispatch such as `agent-runtime test skill <skill>`
 - runtime-specific test entrypoints such as `openclaw/tests/<skill>/TEST.sh`
 
-The newsletter skill test must use OpenClaw's cron `--wait` mode and then verify durable workflow artifacts. A passing test requires a new successful `test-send` usage summary, `format-digest-contract-summary.json` with `status: valid`, and a send-result artifact with a non-empty Gmail message ID. A successful enqueue response is not sufficient.
+The newsletter skill test must first verify that `openclaw skills info newsletter-digest` succeeds, then use the explicit `/skill:newsletter-digest` invocation through OpenClaw's cron `--wait` mode and verify durable workflow artifacts. A passing test requires a new successful `test-send` usage summary, `format-digest-contract-summary.json` with `status: valid`, a successful bounded formatter entry in `model-calls.json`, and a send-result artifact with a non-empty Gmail message ID. A successful enqueue response or an agent that independently rediscovers the runner is not sufficient.
 
 ## Failure model
 

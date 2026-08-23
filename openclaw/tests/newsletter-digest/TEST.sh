@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-MESSAGE="${SKILL_TEST_MESSAGE:-${DIGEST_MESSAGE:-Run newsletter-digest now in test mode.}}"
+MESSAGE="${SKILL_TEST_MESSAGE:-${DIGEST_MESSAGE:-/skill:newsletter-digest Run newsletter-digest now in test mode.}}"
 TIMEOUT_MS="${SKILL_TEST_TIMEOUT_MS:-${DIGEST_TEST_TIMEOUT_MS:-600000}}"
 CONFIG_PATH="${NEWSLETTER_DIGEST_CONFIG:-/workspace/config/newsletter-digest.json}"
 MEMORY_ROOT="${NEWSLETTER_DIGEST_MEMORY_ROOT:-/workspace/memory}"
@@ -14,6 +14,11 @@ fi
 
 if ! command -v jq >/dev/null 2>&1; then
   echo "jq is required for newsletter digest E2E verification." >&2
+  exit 1
+fi
+
+if ! openclaw skills info newsletter-digest >/dev/null 2>&1; then
+  echo "Digest E2E failed: newsletter-digest is not registered as an OpenClaw skill." >&2
   exit 1
 fi
 
@@ -96,12 +101,23 @@ if [ ! -f "${send_result}" ]; then
   exit 1
 fi
 
+model_calls="$(jq -er '.modelCallsJson | select(type == "string" and length > 0)' "${latest_usage_summary}")"
+if [ ! -f "${model_calls}" ]; then
+  echo "Digest E2E failed: model call audit artifact was not found: ${model_calls}" >&2
+  exit 1
+fi
+if ! jq -e 'type == "array" and any(.[]; .task == "format-digest" and .status == "ok" and .promptBytes > 0 and .outputBytes > 0)' "${model_calls}" >/dev/null; then
+  echo "Digest E2E failed: model call audit does not contain a successful bounded formatter call." >&2
+  exit 1
+fi
+
 message_id="$(jq -er '(.message_id // .messageId) | select(type == "string" and length > 0)' "${send_result}")"
 
 jq -n \
   --arg jobId "${JOB_ID}" \
   --arg usageSummary "${latest_usage_summary}" \
   --arg contractSummary "${contract_summary}" \
+  --arg modelCalls "${model_calls}" \
   --arg sendResult "${send_result}" \
   --arg messageId "${message_id}" \
   '{
@@ -109,6 +125,7 @@ jq -n \
     jobId: $jobId,
     usageSummary: $usageSummary,
     contractSummary: $contractSummary,
+    modelCalls: $modelCalls,
     sendResult: $sendResult,
     messageId: $messageId
   }'

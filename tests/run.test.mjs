@@ -109,6 +109,14 @@ test("runner CLI exposes the stable command surface", () => {
   assert.match(output, /NEWSLETTER_DIGEST_MODEL_INPUT/);
 });
 
+test("all packaged OpenClaw skills declare required frontmatter", () => {
+  for (const skillName of ["newsletter-digest", "newsletter-digest-format", "gmail-send"]) {
+    const skill = readFileSync(join("skills", skillName, "SKILL.md"), "utf8");
+    assert.match(skill, new RegExp(`^---\\nname: ${skillName}\\ndescription: ".+"\\n`));
+    assert.match(skill, /\n---\n\n# /);
+  }
+});
+
 test("OpenClaw model adapter writes parsed JSON output", () => {
   const tempDir = makeTempDir("newsletter-openclaw-model");
   const fakeOpenClaw = join(tempDir, "openclaw");
@@ -121,7 +129,12 @@ test("OpenClaw model adapter writes parsed JSON output", () => {
     `#!/usr/bin/env node
 import { writeFileSync } from "node:fs";
 writeFileSync(${JSON.stringify(argsPath)}, JSON.stringify(process.argv.slice(2), null, 2));
-process.stdout.write(JSON.stringify({ outputs: [{ text: JSON.stringify({ ok: true, selectedMessageIds: ["msg-1"] }) }] }));
+process.stdout.write(JSON.stringify({
+  provider: "openrouter",
+  model: "z-ai/glm-5.2",
+  usage: { input: 100, output: 25, totalTokens: 125, cost: { total: 0.001 } },
+  outputs: [{ text: JSON.stringify({ ok: true, selectedMessageIds: ["msg-1"] }) }],
+}));
 `,
   );
   writeJson(inputPath, { candidatesBySource: [{ sourceKey: "source", candidates: [{ messageId: "msg-1" }] }] });
@@ -147,6 +160,38 @@ process.stdout.write(JSON.stringify({ outputs: [{ text: JSON.stringify({ ok: tru
   );
 
   assert.deepEqual(readJson(outputPath), { ok: true, selectedMessageIds: ["msg-1"] });
+  const [modelCall] = readJson(join(tempDir, "model-calls.json"));
+  assert.match(modelCall.startedAt, /^\d{4}-\d{2}-\d{2}T/);
+  assert.equal(modelCall.elapsedMs >= 0, true);
+  assert.equal(modelCall.promptBytes > 0, true);
+  assert.deepEqual(
+    {
+      ...modelCall,
+      startedAt: "<timestamp>",
+      elapsedMs: 0,
+      promptBytes: 1,
+    },
+    {
+      task: "select-candidates",
+      status: "ok",
+      startedAt: "<timestamp>",
+      elapsedMs: 0,
+      transport: "gateway",
+      provider: "openrouter",
+      model: "z-ai/glm-5.2",
+      promptBytes: 1,
+      outputBytes: 42,
+      usage: {
+        input: 100,
+        output: 25,
+        cacheRead: null,
+        cacheWrite: null,
+        reasoningTokens: null,
+        totalTokens: 125,
+        costUsd: 0.001,
+      },
+    },
+  );
   assert.deepEqual(readJson(argsPath).slice(0, 6), ["infer", "model", "run", "--json", "--gateway", "--thinking"]);
 });
 
@@ -929,18 +974,23 @@ import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 const args = process.argv.slice(2);
 appendFileSync(process.env.FAKE_OPENCLAW_CALLS, JSON.stringify(args) + "\\n");
-if (args[0] !== "cron") process.exit(2);
-if (args[1] === "add") {
+if (args[0] === "skills" && args[1] === "info" && args[2] === "newsletter-digest") {
+  process.stdout.write("newsletter-digest ready\\n");
+} else if (args[0] !== "cron") process.exit(2);
+else if (args[1] === "add") {
   process.stdout.write(JSON.stringify({ id: "test-job-1" }));
 } else if (args[1] === "run") {
   const runDir = join(process.env.NEWSLETTER_DIGEST_MEMORY_ROOT, "digests", "2026-07-19", "run-1");
   const sendResult = join(runDir, "send", "send-result.json");
+  const modelCalls = join(runDir, "model-calls.json");
   mkdirSync(dirname(sendResult), { recursive: true });
   writeFileSync(join(runDir, "format-digest-contract-summary.json"), JSON.stringify({ status: "valid" }));
+  writeFileSync(modelCalls, JSON.stringify([{ task: "format-digest", status: "ok", promptBytes: 100, outputBytes: 50 }]));
   writeFileSync(sendResult, JSON.stringify({ messageId: "gmail-message-1" }));
   writeFileSync(join(runDir, "usage-summary.json"), JSON.stringify({
     status: "ok",
     mode: "test-send",
+    modelCallsJson: modelCalls,
     sendResultJson: sendResult,
   }));
   process.stdout.write(JSON.stringify({ ok: true, finished: true }));
@@ -966,6 +1016,9 @@ if (args[1] === "add") {
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /gmail-message-1/);
   const calls = readFileSync(callsPath, "utf8").trim().split("\n").map(JSON.parse);
+  assert.equal(calls.some((args) => args[0] === "skills" && args[1] === "info"), true);
+  const addCall = calls.find((args) => args[1] === "add");
+  assert.equal(addCall[addCall.indexOf("--message") + 1], "/skill:newsletter-digest Run newsletter-digest now in test mode.");
   const runCall = calls.find((args) => args[1] === "run");
   assert.ok(runCall);
   assert.equal(runCall.includes("--wait"), true);
@@ -986,8 +1039,9 @@ test("OpenClaw E2E wrapper rejects an enqueued run without digest proof", () => 
     fakeOpenClaw,
     `#!/usr/bin/env node
 const args = process.argv.slice(2);
-if (args[0] !== "cron") process.exit(2);
-if (args[1] === "add") process.stdout.write(JSON.stringify({ id: "test-job-2" }));
+if (args[0] === "skills" && args[1] === "info" && args[2] === "newsletter-digest") process.stdout.write("newsletter-digest ready\\n");
+else if (args[0] !== "cron") process.exit(2);
+else if (args[1] === "add") process.stdout.write(JSON.stringify({ id: "test-job-2" }));
 else if (args[1] === "run") process.stdout.write(JSON.stringify({ ok: true, enqueued: true }));
 else if (args[1] === "rm") process.stdout.write(JSON.stringify({ ok: true }));
 else process.exit(2);
@@ -1006,6 +1060,34 @@ else process.exit(2);
 
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /without a new successful test-send usage summary/);
+});
+
+test("OpenClaw E2E wrapper fails before scheduling when the skill is unregistered", () => {
+  const tempDir = makeTempDir("newsletter-openclaw-e2e-missing-skill");
+  const memoryRoot = join(tempDir, "memory");
+  const fakeOpenClaw = join(tempDir, "openclaw");
+  ensureDir(memoryRoot);
+
+  writeExecutable(
+    fakeOpenClaw,
+    `#!/usr/bin/env node
+const args = process.argv.slice(2);
+if (args[0] === "skills" && args[1] === "info") process.exit(1);
+process.exit(2);
+`,
+  );
+
+  const result = runBash("openclaw/tests/newsletter-digest/TEST.sh", [], {
+    env: {
+      ...process.env,
+      PATH: `${tempDir}:${process.env.PATH}`,
+      NEWSLETTER_DIGEST_MEMORY_ROOT: memoryRoot,
+      NEWSLETTER_DIGEST_TIMEZONE: "UTC",
+    },
+  });
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /not registered as an OpenClaw skill/);
 });
 
 test("date parser handles Gmail millisecond timestamps", () => {
