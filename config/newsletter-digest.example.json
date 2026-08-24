@@ -20,6 +20,7 @@
           "from:morning@example.com newer_than:2d -label:sent"
         ],
         "linkPreference": "issue-level browser version",
+        "maxCleanMarkdownChars": 12000,
         "selectionRules": [
           "choose the newest valid issue in the active window",
           "prefer the newest same-day issue in the configured timezone when one exists"
@@ -41,10 +42,31 @@
               "kind": "bullets",
               "notes": [
                 "Each bullet should describe what happened and why it matters.",
-                "Do not use headline fragments as bullets."
+                "Do not use headline fragments as bullets.",
+                "Summarize distinct non-lead stories from a clearly labeled roundup section.",
+                "Never reuse supporting details or subthemes from the main article as other stories."
               ]
             }
-          ]
+          ],
+          "validation": {
+            "minGroups": 2,
+            "maxGroups": 2,
+            "uniqueGroupTitles": true,
+            "requiredGroups": [
+              {
+                "title": "Main article",
+                "kind": "paragraphs",
+                "minParagraphs": 2,
+                "maxParagraphs": 3
+              },
+              {
+                "title": "Other major stories",
+                "kind": "bullets",
+                "minItems": 3,
+                "maxItems": 5
+              }
+            ]
+          }
         }
       },
       {
@@ -57,6 +79,7 @@
           "from:business@example.com newer_than:2d -label:sent"
         ],
         "linkPreference": "issue-level browser version",
+        "maxCleanMarkdownChars": 12000,
         "selectionRules": [
           "choose the newest valid issue in the active window",
           "prefer the newest same-day issue in the configured timezone when one exists",
@@ -64,6 +87,11 @@
         ],
         "formatRules": {
           "sectionType": "primary",
+          "validation": {
+            "minGroups": 3,
+            "maxGroups": 7,
+            "uniqueGroupTitles": true
+          },
           "groups": [
             {
               "title": "Opener",
@@ -88,16 +116,14 @@
             {
               "name": "Single-feature edition",
               "trigger": "one main feature instead of the usual opener-plus-multiple-story format",
-              "groups": [
-                {
-                  "title": "Main article",
-                  "kind": "paragraphs",
-                  "minParagraphs": 2,
-                  "maxParagraphs": 4
-                }
-              ],
+              "groupMode": "source-subsections",
+              "groupKind": "paragraphs",
+              "minGroups": 3,
+              "maxGroups": 6,
               "notes": [
-                "Do not fabricate recurring sections when the source does not support them."
+                "Use meaningful source subsection headings as group titles and summarize each subsection separately.",
+                "Exclude sponsor copy, presentation labels, disclaimers, and publication boilerplate.",
+                "Do not collapse the feature into one generic group or fabricate recurring sections."
               ]
             }
           ]

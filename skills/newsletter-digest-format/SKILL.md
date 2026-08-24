@@ -154,11 +154,19 @@ When a source has configured groups:
 - preserve the configured group titles when the source actually supports them
 - preserve the configured `kind` for each group
 - follow configured paragraph-count guidance and notes
+- treat `formatRules.validation` as a hard output contract, including group counts, required titles, kinds, and item or paragraph bounds
 
 When a source has configured special cases:
 
 - apply the matching special-case override instead of forcing the default structure
 - do not fabricate groups the source material does not support
+- when a matching special case uses `groupMode: source-subsections`, create a separate group for each meaningful editorial subsection, use the source subsection heading as the group title, and never collapse the feature into one generic group
+- exclude sponsor copy, presentation labels, disclaimers, and publication boilerplate from source-subsection groups
+
+When a configured roundup group must contain non-lead stories:
+
+- draw those items from explicitly labeled roundup areas such as `THE LATEST NEWS`, not from supporting details inside the lead article
+- make each bullet a distinct story; reactions, precedents, or subthemes from the lead article do not count as other stories
 
 For configured extra collections:
 

@@ -122,6 +122,10 @@ Current examples:
 - expected `kind` values such as `paragraphs` or `bullets`
 - min/max paragraph counts
 - special-case overrides for alternate issue formats
+- deterministic `validation` rules for minimum/maximum group counts, unique titles, required groups, and item/paragraph bounds
+- `groupMode: source-subsections` for long-form issues that should preserve meaningful source subsection headings
+
+Before applying per-source character limits, the runner removes inline Markdown tracking URLs from model content while preserving their visible anchor text. Curated source links remain available separately. This keeps long tracking destinations from crowding later newsletter sections out of the bounded formatter input.
 
 The config should describe policy, not renderer internals.
 
