@@ -75,10 +75,10 @@ Return one valid JSON object with this shape:
   "sections": [
     {
       "type": "primary",
-      "key": "nyt",
+      "key": "primary-source",
       "title": "Primary source title",
       "issueDate": "April 10, 2026",
-      "sender": "The New York Times",
+      "sender": "Example Publisher",
       "issueLink": "https://...",
       "groups": [
         {
@@ -165,7 +165,7 @@ When a source has configured special cases:
 
 When a configured roundup group must contain non-lead stories:
 
-- draw those items from explicitly labeled roundup areas such as `THE LATEST NEWS`, not from supporting details inside the lead article
+- draw those items from explicitly labeled roundup areas identified by the source content or workflow policy, not from supporting details inside the lead article
 - make each bullet a distinct story; reactions, precedents, or subthemes from the lead article do not count as other stories
 
 For configured extra collections:
