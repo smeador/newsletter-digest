@@ -8,6 +8,7 @@ import {
   buildFormatterInput,
   callModelBackend,
   candidateMatchesSourceIdentity,
+  compactMarkdownForModel,
   filterCandidatesByLookback,
   maxCleanMarkdownCharsForSource,
   maxSelectedForExtra,
@@ -922,6 +923,69 @@ test("clean markdown cap can be overridden per source or extra collection", () =
   assert.equal(
     maxCleanMarkdownCharsForSource({ key: "legacy", maxContentChars: 5000 }, { maxCleanMarkdownChars: 12000 }),
     5000,
+  );
+});
+
+test("model content compaction removes tracking URLs without losing section text", () => {
+  const compacted = compactMarkdownForModel(`
+# Lead story
+
+[View in browser](https://tracking.example.com/a/very/long/url "View in browser")
+
+### THE LATEST NEWS
+
+- Canada [changed its trade policy](https://tracking.example.com/news/trade).
+
+[](https://tracking.example.com/empty-image)
+`);
+
+  assert.doesNotMatch(compacted, /https?:\/\//);
+  assert.match(compacted, /View in browser/);
+  assert.match(compacted, /### THE LATEST NEWS/);
+  assert.match(compacted, /Canada changed its trade policy\./);
+});
+
+test("formatted digest validation enforces configured primary group policy", () => {
+  const input = formatterContractFixture();
+  input.selectedSources[0].sourceConfig = {
+    formatRules: {
+      validation: {
+        minGroups: 2,
+        maxGroups: 3,
+        uniqueGroupTitles: true,
+        requiredGroups: [
+          { title: "Main article", kind: "paragraphs", minParagraphs: 2, maxParagraphs: 3 },
+          { title: "Other major stories", kind: "bullets", minItems: 2, maxItems: 4 },
+        ],
+      },
+    },
+  };
+  const digest = validFormattedDigestFixture();
+  digest.sections[0].groups = [
+    {
+      title: "Main article",
+      kind: "paragraphs",
+      content: "The lead story is explained.\n\nIts consequences are clear.",
+    },
+    {
+      title: "Other major stories",
+      kind: "bullets",
+      content: ["A distinct trade story.", "A separate election story."],
+    },
+  ];
+
+  assert.doesNotThrow(() => validateFormattedDigest(digest, input));
+
+  digest.sections[0].groups[1].content = ["Only one secondary story."];
+  assert.throws(
+    () => validateFormattedDigest(digest, input),
+    /Other major stories.*at least 2 items/,
+  );
+
+  digest.sections[0].groups = [digest.sections[0].groups[0]];
+  assert.throws(
+    () => validateFormattedDigest(digest, input),
+    /at least 2 groups[\s\S]*Other major stories.*required/,
   );
 });
 
